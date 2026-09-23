@@ -20,6 +20,7 @@ npm run ingest [-- --pages N] [--limit N] [--no-ai] [--upgrade-prompt]   # real 
 npm test                        # offline error-handling tests (node:test)
 npm run dev                     # API (:8787, read-only) + web (Vite :5173, proxies /api)
 npm run build:web               # production build to dist/web
+npm run deploy                  # static snapshot (export DB -> JSON + build) pushed to gh-pages -> GitHub Pages
 npm run typecheck
 ```
 
@@ -44,6 +45,7 @@ DB file: `data/poc.db` (gitignored; override with `POC_DB_PATH`). AI: `AI_PROVID
 - `analysisStatus` is `ready | stale | pending`. The UI must show pending/stale honestly and always link the original notice.
 - Pages: `/` list (filter/sort in the URL query), `/notices/:id` detail (each date shows its source quote; "캘린더에 추가" downloads an `.ics` built client-side in `web/src/lib/ics.ts`), `/calendar?month=YYYY-MM` (deadline = black "마감" chip, event = blue outlined "일정" chip; dots + agenda list on narrow screens).
 - Calendar entries come from `web/src/lib/events.ts`: deadline = `deadline ?? applicationEnd`, event = `eventDate`. Pending notices have no entries.
+- **Deploy = static snapshot on GitHub Pages** (`scripts/deploy-pages.sh`): `src/export.ts` writes the API responses to `api/notices.json` and `api/notices/<id>.json`; the web build with `VITE_STATIC_API=1` + `VITE_BASE=/<repo>/` reads those instead of the server. `404.html` = `index.html` for deep links. Re-run after ingestion to refresh the live data.
 - `useApi` refetches when the tab regains focus, so newly ingested analyses appear without a reload.
 - **Korean/English (detail page, `?lang=en`):** English notice content comes only from `analysis.en` (title, summary, easyExplanation, target, eventInfo), generated in the SAME Gemini call since prompt v3 and stored in `notice_analysis.en_json`. Pre-v3 analyses have `en: null`, and the UI then shows Korean plus a notice. Category names and UI labels are static (`web/src/lib/i18n.ts`). Dates stay structured and are only formatted per language. Evidence quotes stay Korean. The frontend never translates or calls the AI.
 - Design follows gchf.kr (tokens in `web/src/styles/tokens.css`): greige `#e6e0d7`, brown ink `#2c1600`, green hover `#0d8f00`, black active pill, IBM Plex Sans KR + Fraunces display, italic pill buttons, thin 1px rules, hidden scrollbar with a scroll-progress line. Honour `prefers-reduced-motion`. No 3D (see SKILLS.md rule 2).

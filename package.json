@@ -12,7 +12,9 @@
     "api": "tsx watch src/server.ts",
     "web": "vite --config web/vite.config.ts",
     "dev": "concurrently -k -n api,web -c auto \"npm:api\" \"npm:web\"",
-    "build:web": "vite build --config web/vite.config.ts"
+    "build:web": "vite build --config web/vite.config.ts",
+    "export": "tsx src/export.ts",
+    "deploy": "bash scripts/deploy-pages.sh"
   },
   "author": "",
   "license": "ISC",

@@ -72,6 +72,12 @@
   line-height: 1;
   font-variant-numeric: lining-nums tabular-nums;
 }
+.hero__checked {
+  margin: 16px 0 0;
+  font-size: var(--text-small);
+  font-style: italic;
+  color: var(--ink-muted);
+}
 .hero__cue {
   align-self: center;
   margin-top: 32px;

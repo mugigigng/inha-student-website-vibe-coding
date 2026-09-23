@@ -56,6 +56,7 @@ export function NoticeListPage() {
   }, [notices, filter, sort]);
 
   const analyzed = notices.filter((n) => n.analysis).length;
+  const lastChecked = notices.reduce<string | null>((max, n) => (!max || n.crawledAt > max ? n.crawledAt : max), null);
   const closingSoon = notices.filter((n) => {
     const d = deadlineOf(n);
     return d !== null && daysUntil(d) >= 0 && daysUntil(d) <= 7;
@@ -92,6 +93,12 @@ export function NoticeListPage() {
             </dl>
           )}
         </div>
+        {lastChecked && (
+          <p className="hero__checked">
+            인하대 공지사항 마지막 확인 ·{' '}
+            {new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(lastChecked))}
+          </p>
+        )}
         <button type="button" className="hero__cue" onClick={() => scrollToTarget('#notices', -72)}>
           공지 보러 가기 <span aria-hidden>↓</span>
         </button>

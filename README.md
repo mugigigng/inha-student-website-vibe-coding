@@ -1,0 +1,55 @@
+# Inha notices
+
+**Live site: https://yaminmamamyo-maw.github.io/inha-student-website-vibe-coding/**
+
+Inha University (인하대학교) notices, read by AI and organized by deadline.
+
+The app crawls the official 공지사항 board. Gemini extracts the application period, deadline, event date, eligibility and a plain-language summary (in Korean and English), and the site shows them as a filterable list, a detail page and a monthly calendar.
+
+> This is an unofficial student project. AI-extracted information can be wrong: every notice links to its official source and shows the quote each date came from. Always confirm in the original notice.
+
+## What's on the site
+
+- **Notice list:** category filter, newest or closing-soon sort, D-day badges (Korea time).
+- **Notice detail:** 3-line AI summary, plain explanation, eligibility, key dates with their source quotes, a Korean/English toggle, "캘린더에 추가" (downloads an `.ics` file), and a link to the original.
+- **Calendar:** monthly view that separates application deadlines (black **마감**) from event dates (blue **일정**).
+
+Notices the AI hasn't analyzed yet are shown as "분석 대기" with a link to the original. They are never shown with guessed dates.
+
+## How it works
+
+```
+www.inha.ac.kr 공지사항 → crawler → SQLite (original notice) → Gemini (only new/changed notices) → SQLite (analysis) → JSON API → React site
+```
+
+- **Change detection:** each notice's text is hashed. Unchanged notices never reach Gemini, and edited notices are re-analyzed. Older analyses are kept and marked stale.
+- **AI output is structured JSON, checked in code:** every date must quote the notice text word for word, or a warning is stored with the analysis.
+- **Gemini free tier:** fallback models, per-model cooldowns, and the daily-quota limit remembered across runs, so no requests are wasted.
+
+## About the live site
+
+The live site is a **static snapshot** hosted on GitHub Pages. `npm run deploy` exports the local database as JSON and publishes the build. The home page shows when the notices were last checked. The data refreshes when a new snapshot is deployed, not in real time.
+
+## Run it locally
+
+Requires Node 22.5+ (uses the built-in `node:sqlite`).
+
+```bash
+npm install
+cp .env.example .env     # set GEMINI_API_KEY (free key: https://aistudio.google.com/apikey)
+npm run ingest           # crawl the board → store → analyze new/changed notices
+npm run dev              # API on :8787 + site on http://localhost:5173
+```
+
+| Command | What it does |
+|---|---|
+| `npm run ingest [-- --pages N] [--no-ai] [--upgrade-prompt]` | Crawl, detect new/updated notices, analyze only where needed |
+| `npm run dev` | Read-only API + Vite dev server |
+| `npm test` / `npm run typecheck` | Tests (node:test) / TypeScript for backend and web |
+| `npm run deploy` | Build a static snapshot and publish it to GitHub Pages |
+
+More detail: [`CLAUDE.md`](CLAUDE.md) (architecture), [`docs/ingestion-result.md`](docs/ingestion-result.md) (pipeline verification), [`docs/notice-sources.md`](docs/notice-sources.md) (sources and crawling rules).
+
+## Stack
+
+TypeScript · Node (`node:sqlite`, `node:http`) · cheerio · Gemini (`@google/genai`) with Zod-validated structured output · React 19 + Vite + react-router · Lenis. The design is adapted from [gchf.kr](https://gchf.kr).

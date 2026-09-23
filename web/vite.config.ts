@@ -6,6 +6,7 @@ const shared = fileURLToPath(new URL('../src', import.meta.url));
 
 export default defineConfig({
   root: fileURLToPath(new URL('.', import.meta.url)),
+  base: process.env.VITE_BASE ?? '/', // '/<repo>/' for GitHub Pages
   plugins: [react()],
   resolve: { alias: { '@shared': shared } }, // backend types + categories, type-only or dependency-free
   server: {

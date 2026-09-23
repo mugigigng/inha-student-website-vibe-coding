@@ -2,9 +2,18 @@ import { useEffect, useState } from 'react';
 import type { ApiError, NoticeDetail, NoticeListItem } from '@shared/api/types.ts';
 
 // Thin client for src/server.ts. Types come from the backend — no duplicated shapes.
+// Static hosting (GitHub Pages) has no server: `npm run export` writes the same responses
+// as JSON files, and VITE_STATIC_API=1 points the client at them instead.
+
+const STATIC = import.meta.env.VITE_STATIC_API === '1';
+const BASE = import.meta.env.BASE_URL; // '/' in dev, '/<repo>/' on GitHub Pages
 
 async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   const res = await fetch(path, { signal });
+  // A static host answers unknown files with an HTML page (404, or 200 via SPA fallback).
+  if (STATIC && (res.status === 404 || !res.headers.get('content-type')?.includes('json'))) {
+    throw new Error('Notice not found');
+  }
   if (!res.ok) {
     const body = (await res.json().catch(() => null)) as ApiError | null;
     throw new Error(body?.error ?? `HTTP ${res.status}`);
@@ -13,8 +22,9 @@ async function getJson<T>(path: string, signal?: AbortSignal): Promise<T> {
 }
 
 export const api = {
-  notices: (signal?: AbortSignal) => getJson<NoticeListItem[]>('/api/notices', signal),
-  notice: (id: number, signal?: AbortSignal) => getJson<NoticeDetail>(`/api/notices/${id}`, signal),
+  notices: (signal?: AbortSignal) => getJson<NoticeListItem[]>(STATIC ? `${BASE}api/notices.json` : '/api/notices', signal),
+  notice: (id: number, signal?: AbortSignal) =>
+    getJson<NoticeDetail>(STATIC ? `${BASE}api/notices/${id}.json` : `/api/notices/${id}`, signal),
 };
 
 export type AsyncState<T> =

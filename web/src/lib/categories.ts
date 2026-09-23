@@ -1,0 +1,18 @@
+import { CATEGORIES, type Category } from '@shared/categories.ts';
+
+export { CATEGORIES, type Category };
+
+/** Chip tint per AI category (gchf palette + pale tints of its accents). */
+export const CATEGORY_TINT: Record<Category, string> = {
+  장학금: 'var(--mint)',
+  학사: 'var(--lavender)',
+  '모집/선발': 'var(--sand)',
+  '행사/특강': '#f3d6e4',
+  '취업/진로': '#e6e2c4',
+  국제교류: '#cfdcf3',
+  '시설/생활': '#ece8e1',
+  기타: 'transparent',
+};
+
+/** Filter value for notices that have no AI analysis yet. */
+export const PENDING_FILTER = '분석 대기';

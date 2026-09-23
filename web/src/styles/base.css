@@ -1,0 +1,178 @@
+@import './tokens.css';
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  word-break: keep-all; /* Korean: never break inside a word */
+}
+*::selection {
+  background: var(--sand);
+}
+
+html {
+  scrollbar-width: none; /* hidden scrollbar like gchf; progress bar + Lenis replace it */
+}
+html::-webkit-scrollbar {
+  display: none;
+}
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-weight: 400;
+  font-size: var(--text-normal);
+  line-height: 1.6;
+  color: var(--ink);
+  background: var(--paper);
+  text-wrap: pretty;
+  -webkit-font-smoothing: antialiased;
+}
+
+a {
+  color: inherit;
+}
+button {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+
+/* 2px scroll-progress line (CSS scroll-driven animation; no JS) */
+.scroll-progress {
+  position: fixed;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: var(--accent);
+  transform-origin: 0 50%;
+  transform: scaleX(0);
+  z-index: 200;
+  animation: grow-progress linear both;
+  animation-timeline: scroll(root);
+}
+@keyframes grow-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* shared pill (gchf menu button) */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 14px;
+  border: 1px solid var(--ink);
+  border-radius: var(--pill);
+  background: #fff;
+  color: var(--ink);
+  font-style: italic;
+  font-size: var(--text-normal);
+  line-height: 1.5;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s, background-color 0.2s;
+}
+.pill:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.pill[aria-current='page'],
+.pill[aria-pressed='true'] {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--paper);
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* slow opacity pulse from gchf ("click the screen…") */
+@keyframes blink-smooth {
+  0%,
+  100% {
+    opacity: 0.85;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .scroll-progress {
+    display: none;
+  }
+}
+
+/* site footer: thin rule, small type (gchf .final-footer) */
+.site-foot {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 10px var(--gutter);
+  border-top: 1px solid var(--rule);
+  font-size: var(--text-tiny);
+  color: var(--ink-muted);
+}
+@media (max-width: 640px) {
+  .site-foot {
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+/* primary action: the black "active" pill, used for the one main action per page */
+.pill--solid {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--paper);
+  font-style: normal;
+  font-weight: 500;
+}
+.pill--solid:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.pill:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+/* chip: category / status label (shared by cards and detail) */
+.chip {
+  padding: 1px 10px;
+  border: 1px solid var(--ink);
+  border-radius: var(--pill);
+  font-size: var(--text-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chip--pending {
+  border-style: dashed;
+  color: var(--ink-muted);
+  background: transparent;
+}

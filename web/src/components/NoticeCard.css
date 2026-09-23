@@ -1,0 +1,138 @@
+.card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 20px 20px 16px;
+  background: var(--paper-raised);
+  border: 1px solid var(--ink);
+  transition: background-color 0.35s var(--ease), border-color 0.35s var(--ease), transform 0.35s var(--ease);
+}
+.card:hover,
+.card:focus-within {
+  background: #f6f2ec;
+  border-color: var(--accent);
+  transform: translateY(-3px);
+}
+.card:hover .card__title {
+  color: var(--accent);
+}
+
+.card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.card__title {
+  color: var(--accent);
+}
+
+.card__top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+.chip {
+  padding: 1px 10px;
+  border: 1px solid var(--ink);
+  border-radius: var(--pill);
+  font-size: var(--text-small);
+  font-weight: 500;
+  white-space: nowrap;
+}
+.chip--pending {
+  border-style: dashed;
+  color: var(--ink-muted);
+  background: transparent;
+}
+
+.card__title {
+  margin: 0;
+  font-size: var(--text-big);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  transition: color 0.2s;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card__link {
+  text-decoration: none;
+}
+.card__link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+
+.card__summary {
+  margin: 0;
+  color: var(--ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.65;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.card__summary--pending {
+  font-style: italic;
+}
+.card__ai {
+  margin-right: 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--ink);
+}
+
+.card__dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  font-size: var(--text-small);
+  font-variant-numeric: tabular-nums;
+}
+.card__dates div {
+  display: flex;
+  gap: 6px;
+}
+.card__dates dt {
+  color: var(--ink-muted);
+}
+.card__dates dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.card__note {
+  margin: 0;
+  font-size: var(--text-tiny);
+  color: var(--urgent);
+}
+
+.card__foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: auto;
+  padding-top: 4px;
+  font-size: var(--text-tiny);
+  color: var(--ink-muted);
+}
+.card__source {
+  position: relative; /* above the stretched link */
+  z-index: 1;
+  font-style: italic;
+  text-decoration: none;
+  color: var(--ink);
+}
+.card__source:hover {
+  color: var(--accent);
+}

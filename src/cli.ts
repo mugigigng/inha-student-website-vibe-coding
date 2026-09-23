@@ -1,0 +1,158 @@
+import './env.ts';
+import { createProvider, type AiProvider } from './ai/index.ts';
+import { analyzeNotice, PROMPT_VERSION } from './analyze.ts';
+import { contentHash, counts, DB_PATH, getNotice, hasCurrentAnalysis, insertAnalysis, listNoticesWithLatestAnalysis, openDb, upsertNotice } from './db.ts';
+import { InvalidAiJsonError, PocError } from './errors.ts';
+import { ingest } from './ingest.ts';
+import { fetchNotice, listNotices } from './sources/inhaMainNotice.ts';
+
+const USAGE = `Usage:
+  npm run crawl -- <notice-url>              fetch + parse only (no DB, no AI)
+  npm run poc   -- <notice-url> [--reanalyze] fetch -> DB -> AI -> DB -> print
+  npm run show  [-- <notice-id>]             print stored notices + latest analysis
+  npm run ingest [-- --pages N] [--limit N] [--no-ai] [--upgrade-prompt]
+                                             crawl the board list -> new/updated detection -> DB -> AI only where needed`;
+
+async function main(argv: string[]) {
+  const [command, ...rest] = argv;
+  const url = rest.find((a) => !a.startsWith('--'));
+
+  switch (command) {
+    case 'crawl': {
+      if (!url) throw new UsageError();
+      const n = await fetchNotice(url);
+      printJson('RawNotice', { ...n, rawHtml: `<${n.rawHtml.length} chars>` });
+      return;
+    }
+    case 'poc': {
+      if (!url) throw new UsageError();
+      return runPipeline(url, rest.includes('--reanalyze'));
+    }
+    case 'show': {
+      const db = openDb();
+      const rows = listNoticesWithLatestAnalysis(db).filter((r) => !url || String(r.id) === url);
+      if (rows.length === 0) console.log(`No notices stored in ${DB_PATH}.`);
+      for (const r of rows) printJson(`notices.id=${r.id}`, decodeJsonColumns(r));
+      return;
+    }
+    case 'ingest':
+      return runIngest(rest);
+    default:
+      throw new UsageError();
+  }
+}
+
+async function runIngest(args: string[]) {
+  const flag = (name: string) => {
+    const i = args.indexOf(name);
+    return i >= 0 ? Number(args[i + 1]) : undefined;
+  };
+  const db = openDb();
+  console.log(`[DB] before: ${JSON.stringify(counts(db))}`);
+
+  let provider: AiProvider | null = null;
+  if (!args.includes('--no-ai')) {
+    try {
+      provider = createProvider();
+      console.log(`[AI] provider ${provider.name}, model ${provider.model}`);
+    } catch (err) {
+      console.log(`[AI] disabled for this run: ${(err as Error).message}`);
+    }
+  }
+
+  const stats = await ingest({
+    db,
+    listNotices: () => listNotices({ pages: flag('--pages') ?? 1 }),
+    fetchNotice,
+    analyze: provider ? (n) => analyzeNotice(n, provider) : null,
+    limit: flag('--limit'),
+    upgradePrompt: args.includes('--upgrade-prompt'),
+    aiDelayMs: Number(process.env.INGEST_AI_DELAY_MS ?? 4000),
+  });
+
+  const { errors, ...summary } = stats;
+  console.log(`[DONE] ${JSON.stringify(summary)}`);
+  if (provider) console.log(`[AI] ${provider.name} requests this run: ${provider.requestCount ?? 'n/a'}`);
+  for (const e of errors) console.log(`  - ${e.noticeId} (${e.stage}): ${e.message}`);
+  console.log(`[DB] after: ${JSON.stringify(counts(db))}`);
+  if (stats.crawlFailed || stats.analysisFailed) process.exitCode = 2;
+}
+
+async function runPipeline(url: string, reanalyze: boolean) {
+  const db = openDb();
+
+  step(1, 'Crawl');
+  const notice = await fetchNotice(url);
+  console.log(`  source URL : ${notice.sourceUrl}`);
+  console.log(`  title      : ${notice.title}`);
+  console.log(`  published  : ${notice.publishedAt ?? '(none)'}   board category: ${notice.boardCategory ?? '(none)'}`);
+  console.log(`  content    : ${notice.originalContent.length} chars, ${notice.originalContent.split('\n').length} lines`);
+  console.log(`  not parsed : ${notice.attachments.map((a) => `${a.kind}:${a.name}`).join(', ') || '(none)'}`);
+
+  step(2, 'Store original notice');
+  const { id: noticeId, status, changed } = upsertNotice(db, notice);
+  if (status === 'new') console.log(`  inserted notices.id=${noticeId} into ${DB_PATH}`);
+  else if (status === 'updated') console.log(`  UPDATED notices.id=${noticeId}: ${changed.join(', ')} changed on the site; stored row refreshed`);
+  else console.log(`  DUPLICATE: notices.id=${noticeId} already stored and unchanged. No new row inserted; crawled_at updated.`);
+  if (hasCurrentAnalysis(db, noticeId) && !reanalyze) {
+    console.log('  Analysis for the current content already exists; skipping the AI call (pass --reanalyze to force).');
+    printStored(db, noticeId);
+    return;
+  }
+
+  step(3, 'Analyze with AI');
+  let result;
+  try {
+    result = await analyzeNotice(notice);
+  } catch (err) {
+    if (err instanceof InvalidAiJsonError && err.rawResponse) {
+      console.error(`  raw model output:\n${err.rawResponse}`);
+    }
+    console.error(`  The original notice is still stored as notices.id=${noticeId}; only the analysis failed.`);
+    throw err;
+  }
+  console.log(`  provider: ${result.provider}   model: ${result.model}`);
+  printJson('AI result', result.analysis);
+  if (result.validationWarnings.length) {
+    console.log(`  VALIDATION WARNINGS:\n    - ${result.validationWarnings.join('\n    - ')}`);
+  } else {
+    console.log('  validation: all dates well-formed and backed by verbatim quotes from the notice');
+  }
+
+  step(4, 'Store analysis');
+  const analysisId = insertAnalysis(db, noticeId, result, PROMPT_VERSION, contentHash(notice));
+  console.log(`  inserted notice_analysis.id=${analysisId} (notice_id=${noticeId})`);
+
+  printStored(db, noticeId);
+}
+
+function printStored(db: ReturnType<typeof openDb>, noticeId: number) {
+  step(5, 'Read back from database');
+  const n = getNotice(db, noticeId)!;
+  printJson('notices row', { ...n, raw_html: `<${String(n.raw_html).length} chars>`, original_content: `<${String(n.original_content).length} chars>` });
+  const row = listNoticesWithLatestAnalysis(db).find((r) => r.id === noticeId);
+  printJson('notice joined with latest analysis (id = notices.id, analysis_id = notice_analysis.id)', decodeJsonColumns(row ?? {}));
+}
+
+function decodeJsonColumns(row: Record<string, unknown>) {
+  return Object.fromEntries(
+    Object.entries(row).map(([k, v]) => [k.replace(/_json$/, ''), k.endsWith('_json') && typeof v === 'string' ? JSON.parse(v) : v]),
+  );
+}
+
+const step = (n: number, label: string) => console.log(`\n[${n}] ${label}`);
+const printJson = (label: string, v: unknown) => console.log(`  ${label}:\n${JSON.stringify(v, null, 2).replace(/^/gm, '    ')}`);
+
+class UsageError extends Error {}
+
+main(process.argv.slice(2)).catch((err) => {
+  if (err instanceof UsageError) {
+    console.error(USAGE);
+  } else if (err instanceof PocError) {
+    console.error(`\nFAILED — ${err.name}: ${err.message}`);
+    if (err.cause) console.error(`  cause: ${(err.cause as Error).message ?? err.cause}`);
+  } else {
+    console.error('\nFAILED — unexpected error:', err);
+  }
+  process.exitCode = 1;
+});

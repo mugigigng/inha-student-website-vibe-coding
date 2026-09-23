@@ -1,0 +1,30 @@
+.dday {
+  flex: none;
+  padding: 1px 10px;
+  border: 1px solid var(--ink);
+  border-radius: var(--pill);
+  font-size: var(--text-small);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.dday--urgent {
+  background: var(--urgent);
+  border-color: var(--urgent);
+  color: #fff;
+}
+.dday--soon {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--paper);
+}
+.dday--open {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+.dday--closed {
+  color: var(--ink-muted);
+  border-color: currentColor;
+  border-style: dashed;
+}

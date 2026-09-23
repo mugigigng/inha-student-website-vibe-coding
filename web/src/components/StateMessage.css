@@ -1,0 +1,14 @@
+.state {
+  padding: 64px 0;
+  text-align: center;
+}
+.state__title {
+  margin: 0 0 6px;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: var(--text-display);
+}
+.state__body {
+  margin: 0 0 16px;
+  color: var(--ink-muted);
+}

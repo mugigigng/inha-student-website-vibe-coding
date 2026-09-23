@@ -1,0 +1,44 @@
+/*
+ * Design tokens — adapted from gchf.kr (계촌 HOO 페스티벌):
+ * warm greige paper, dark-brown ink, green hover, black "you are here" pill,
+ * IBM Plex Sans KR body + a display serif, thin 1px rules, italic pill buttons.
+ */
+:root {
+  /* color */
+  --ink: #2c1600;              /* text — never pure black text */
+  --ink-muted: #6f5d4c;
+  --paper: #e6e0d7;            /* page background */
+  --paper-raised: #efeae3;     /* cards */
+  --mint: #d7e6d8;             /* secondary band / chip */
+  --lavender: #d7dce6;         /* tertiary band / chip */
+  --sand: #dfc4a7;             /* selection / chip */
+  --accent: #0d8f00;           /* hover + "open" state */
+  --hero: #1450d2;             /* display type blue (HOO lettering) */
+  --urgent: #ff0083;           /* deadline today / tomorrow */
+  --black: #111;               /* active pill fill */
+  --rule: var(--ink);
+
+  /* type */
+  --font-sans: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --font-display: 'Fraunces', 'Times New Roman', serif;
+  --text-display: 24px;
+  --text-big: 18px;
+  --text-normal: 16px;
+  --text-small: 13px;
+  --text-tiny: 12px;
+
+  /* layout */
+  --gutter: 2vw;
+  --max: 1320px;
+  --pill: 999px;
+  --ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@media (max-width: 500px) {
+  :root {
+    --gutter: 16px;
+    --text-display: 20px;
+    --text-big: 16px;
+    --text-normal: 15px;
+  }
+}

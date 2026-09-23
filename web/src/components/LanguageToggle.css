@@ -1,0 +1,27 @@
+/* one pill track, two segments — the active one is the black "you are here" fill */
+.lang {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--ink);
+  border-radius: var(--pill);
+  background: #fff;
+}
+.lang__btn {
+  padding: 2px 12px;
+  border: 0;
+  border-radius: var(--pill);
+  background: none;
+  font-size: var(--text-small);
+  font-style: italic;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color 0.2s, color 0.2s;
+}
+.lang__btn:hover {
+  color: var(--accent);
+}
+.lang__btn[aria-pressed='true'] {
+  background: var(--black);
+  color: var(--paper);
+  font-style: normal;
+}

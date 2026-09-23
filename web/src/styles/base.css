@@ -176,3 +176,48 @@ button {
   color: var(--ink-muted);
   background: transparent;
 }
+
+/* event chips (calendar, upcoming lists): deadline vs event must be distinguishable without color too */
+.ev {
+  display: block;
+  padding: 1px 8px;
+  border: 1px solid;
+  border-radius: 4px;
+  font-size: var(--text-tiny);
+  line-height: 1.6;
+  text-decoration: none;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: background-color 0.2s, color 0.2s;
+}
+.ev--deadline {
+  background: var(--black);
+  border-color: var(--black);
+  color: var(--paper);
+}
+.ev--deadline::before {
+  content: '마감 ';
+  font-weight: 600;
+}
+.ev--event {
+  background: #fff;
+  border-color: var(--hero);
+  color: var(--hero);
+}
+.ev--event::before {
+  content: '일정 ';
+  font-weight: 600;
+}
+a.ev:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.ev--sample {
+  display: inline-block;
+}
+.ev--sample::before {
+  content: none;
+}
+

@@ -1,0 +1,108 @@
+.profile {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 104px var(--gutter) 96px;
+}
+.profile__eyebrow {
+  margin: 0 0 8px;
+  font-style: italic;
+}
+.profile__title {
+  margin: 0;
+  font-size: clamp(24px, 3.2vw, 34px);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.02em;
+}
+.profile__note {
+  margin: 12px 0 0;
+  color: var(--ink-muted);
+  font-size: var(--text-small);
+  line-height: 1.7;
+}
+.profile__form {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px 24px;
+  margin-top: 36px;
+  padding-top: 28px;
+  border-top: 1px solid var(--rule);
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+.field--wide,
+.field:has(.choice-row) {
+  grid-column: 1 / -1;
+}
+.field label,
+.field legend {
+  padding: 0;
+  font-size: var(--text-small);
+  font-weight: 600;
+}
+.field legend {
+  margin-bottom: 8px;
+}
+.field__hint {
+  margin-left: 6px;
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+.field select {
+  appearance: none;
+  width: 100%;
+  padding: 10px 40px 10px 14px;
+  border: 1px solid var(--ink);
+  border-radius: 0;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%232c1600' stroke-width='1.5'/%3E%3C/svg%3E") no-repeat right 14px center;
+  font: inherit;
+  color: var(--ink);
+}
+.field select:disabled {
+  opacity: 0.5;
+}
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.profile__actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-top: 8px;
+}
+.profile__clear {
+  margin-left: auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-small);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.profile__clear:hover {
+  color: var(--urgent);
+}
+.profile__hint {
+  grid-column: 1 / -1;
+  margin: -8px 0 0;
+  font-size: var(--text-tiny);
+  color: var(--ink-muted);
+}
+@media (max-width: 640px) {
+  .profile__form {
+    grid-template-columns: 1fr;
+  }
+}

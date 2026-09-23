@@ -4,6 +4,7 @@ import './Nav.css';
 const LINKS = [
   { to: '/', label: '공지', end: true },
   { to: '/calendar', label: '캘린더', end: false },
+  { to: '/profile', label: '프로필', end: false },
 ];
 
 export function Nav() {

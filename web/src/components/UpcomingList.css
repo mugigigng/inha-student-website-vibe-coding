@@ -1,0 +1,56 @@
+.upcoming {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.upcoming__row {
+  display: grid;
+  grid-template-columns: max-content 76px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 4px;
+  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  text-decoration: none;
+  transition: color 0.2s, background-color 0.2s;
+}
+.upcoming li:last-child .upcoming__row {
+  border-bottom: 1px solid rgba(44, 22, 0, 0.18);
+}
+.upcoming__row:hover {
+  color: var(--accent);
+  background: rgba(255, 255, 255, 0.35);
+}
+.upcoming__date {
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+.upcoming__row .ev--sample {
+  text-align: center;
+}
+.upcoming__title {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 640px) {
+  .upcoming__row {
+    grid-template-columns: max-content minmax(0, 1fr) auto;
+    grid-template-areas: 'date kind dday' 'title title title';
+    gap: 4px 10px;
+  }
+  .upcoming__date {
+    grid-area: date;
+  }
+  .upcoming__row .ev--sample {
+    grid-area: kind;
+    justify-self: start;
+  }
+  .upcoming__title {
+    grid-area: title;
+    white-space: normal;
+  }
+  .upcoming__row .dday {
+    grid-area: dday;
+  }
+}

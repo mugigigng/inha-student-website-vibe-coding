@@ -14,7 +14,19 @@
   border-color: var(--accent);
   transform: translateY(-3px);
 }
-.card:hover .card__title {
+.card:hover .card__match {
+  margin: -2px 0 -4px;
+  font-size: var(--text-small);
+  font-weight: 600;
+  color: var(--accent);
+}
+.card__match-note {
+  font-weight: 400;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.card__title {
   color: var(--accent);
 }
 

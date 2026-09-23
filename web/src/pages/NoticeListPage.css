@@ -1,11 +1,11 @@
 /* ---------- hero: big display type, gchf-style ---------- */
 .hero {
   position: relative;
-  min-height: 92svh;
+  min-height: 0; /* compact: the dashboard starts right below */
   display: flex;
   flex-direction: column;
   justify-content: flex-end;
-  padding: 120px var(--gutter) 40px;
+  padding: 84px var(--gutter) 32px;
   overflow: hidden;
   border-bottom: 1px solid var(--rule);
 }
@@ -20,7 +20,7 @@
   margin: 0;
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: clamp(64px, 15vw, 220px);
+  font-size: clamp(52px, 9vw, 132px);
   line-height: 0.86;
   letter-spacing: -0.045em;
   color: var(--hero);
@@ -45,12 +45,31 @@
   justify-content: space-between;
   align-items: flex-end;
   gap: 24px;
-  margin-top: 40px;
+  margin-top: 28px;
 }
-.hero__lede {
+.hero__hello {
   margin: 0;
   font-size: var(--text-display);
-  line-height: 1.5;
+  line-height: 1.4;
+}
+.hero__hello strong {
+  font-weight: 600;
+}
+.hero__lede {
+  margin: 6px 0 0;
+  color: var(--ink-muted);
+  line-height: 1.7;
+}
+.hero__lede a:not(.pill) {
+  color: var(--ink);
+  font-style: italic;
+}
+.hero__lede a:not(.pill):hover {
+  color: var(--accent);
+}
+.hero__cta {
+  margin-left: 6px;
+  vertical-align: middle;
 }
 .hero__stats {
   display: flex;
@@ -163,4 +182,54 @@
   .pill {
     font-size: var(--text-small);
   }
+}
+
+/* ---------- personalized sections ---------- */
+.section-head {
+  margin-bottom: 18px;
+}
+.section-head__title {
+  margin: 0;
+  font-size: var(--text-display);
+  font-weight: 600;
+}
+.section-head__note {
+  margin: 4px 0 0;
+  font-size: var(--text-small);
+  font-style: italic;
+  color: var(--ink-muted);
+}
+.section-head__note a {
+  color: var(--ink);
+}
+.section-head__note a:hover {
+  color: var(--accent);
+}
+
+/* recommendations sit on a tinted band so "for you" never blends into "all notices" */
+.foryou {
+  background: var(--mint);
+  border-bottom: 1px solid var(--rule);
+}
+.foryou__inner {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 40px var(--gutter) 44px;
+}
+.foryou .list__grid {
+  margin-top: 0;
+}
+.foryou .card {
+  background: #f7faf6;
+}
+.foryou__empty {
+  margin: 0;
+  font-style: italic;
+  color: var(--ink-muted);
+}
+
+.soon {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 40px var(--gutter) 8px;
 }

@@ -11,7 +11,7 @@ export default defineConfig({
   resolve: { alias: { '@shared': shared } }, // backend types + categories, type-only or dependency-free
   server: {
     port: 5173,
-    proxy: { '/api': 'http://localhost:8787' },
+    proxy: { '/api': `http://localhost:${process.env.API_PORT ?? 8787}` }, // API_PORT lets a second API (other DB) run side by side
     fs: { allow: ['..'] },
   },
   build: { outDir: '../dist/web', emptyOutDir: true },

@@ -1,9 +1,13 @@
 import './env.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import { createProvider, type AiProvider } from './ai/index.ts';
 import { analyzeNotice, PROMPT_VERSION } from './analyze.ts';
 import { contentHash, counts, DB_PATH, getNotice, hasCurrentAnalysis, insertAnalysis, listNoticesWithLatestAnalysis, openDb, upsertNotice } from './db.ts';
 import { InvalidAiJsonError, PocError } from './errors.ts';
+import { getNoticeDetail } from './api/notices.ts';
 import { ingest } from './ingest.ts';
+import { notificationCandidates } from './match.ts';
+import { parseProfile, type Profile } from './profile.ts';
 import { fetchNotice, listNotices } from './sources/inhaMainNotice.ts';
 
 const USAGE = `Usage:
@@ -60,6 +64,12 @@ async function runIngest(args: string[]) {
     }
   }
 
+  // Personalization foundation: match each newly analyzed notice against saved profiles
+  // (data/profiles.json, optional). Only logs for now — no notifications are sent.
+  const profiles = loadProfiles();
+  if (profiles.length) console.log(`[MATCH] ${profiles.length} profile(s) loaded; new analyses will be matched`);
+  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+
   const stats = await ingest({
     db,
     listNotices: () => listNotices({ pages: flag('--pages') ?? 1 }),
@@ -68,6 +78,15 @@ async function runIngest(args: string[]) {
     limit: flag('--limit'),
     upgradePrompt: args.includes('--upgrade-prompt'),
     aiDelayMs: Number(process.env.INGEST_AI_DELAY_MS ?? 4000),
+    onAnalyzed: profiles.length
+      ? (noticeId) => {
+          const notice = getNoticeDetail(db, noticeId);
+          if (!notice) return;
+          for (const c of notificationCandidates(notice, profiles, today)) {
+            console.log(`[MATCH] Notice ${notice.sourceNoticeId} → ${c.profileId}: ${c.result.matchLevel} (${c.result.matchReasons.join(', ')})`);
+          }
+        }
+      : undefined,
   });
 
   const { errors, ...summary } = stats;
@@ -142,6 +161,17 @@ function decodeJsonColumns(row: Record<string, unknown>) {
 
 const step = (n: number, label: string) => console.log(`\n[${n}] ${label}`);
 const printJson = (label: string, v: unknown) => console.log(`  ${label}:\n${JSON.stringify(v, null, 2).replace(/^/gm, '    ')}`);
+
+/** Optional demo profiles for match logging: data/profiles.json = [{ "id": "...", "profile": {...} }]. */
+function loadProfiles(): { id: string; profile: Profile }[] {
+  const file = process.env.PROFILES_FILE ?? 'data/profiles.json';
+  if (!existsSync(file)) return [];
+  const raw = JSON.parse(readFileSync(file, 'utf8')) as { id?: string; profile?: unknown }[];
+  return raw.flatMap((r, i) => {
+    const profile = parseProfile(r.profile);
+    return profile ? [{ id: r.id ?? `profile-${i + 1}`, profile }] : [];
+  });
+}
 
 class UsageError extends Error {}
 

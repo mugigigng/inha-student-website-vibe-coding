@@ -44,50 +44,6 @@
   color: var(--ink-muted);
 }
 
-/* ---------- event chips: deadline vs event must be distinguishable without color too ---------- */
-.ev {
-  display: block;
-  padding: 1px 8px;
-  border: 1px solid;
-  border-radius: 4px;
-  font-size: var(--text-tiny);
-  line-height: 1.6;
-  text-decoration: none;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  transition: background-color 0.2s, color 0.2s;
-}
-.ev--deadline {
-  background: var(--black);
-  border-color: var(--black);
-  color: var(--paper);
-}
-.ev--deadline::before {
-  content: '마감 ';
-  font-weight: 600;
-}
-.ev--event {
-  background: #fff;
-  border-color: var(--hero);
-  color: var(--hero);
-}
-.ev--event::before {
-  content: '일정 ';
-  font-weight: 600;
-}
-a.ev:hover {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.ev--sample {
-  display: inline-block;
-}
-.ev--sample::before {
-  content: none;
-}
-
 /* ---------- month grid ---------- */
 .grid {
   display: grid;
@@ -207,10 +163,6 @@ a.ev:hover {
   font-size: var(--text-display);
   font-weight: 600;
 }
-.agenda__empty {
-  color: var(--ink-muted);
-  font-style: italic;
-}
 .agenda__list {
   margin: 0;
   padding: 0;
@@ -275,12 +227,13 @@ a.ev:hover {
     align-self: center;
   }
   .agenda__item {
-    grid-template-columns: 80px minmax(0, 1fr) auto;
+    grid-template-columns: max-content minmax(0, 1fr) auto; /* date + time never wraps */
     grid-template-areas: 'date kind dday' 'name name name';
     gap: 6px 10px;
   }
   .agenda__date {
     grid-area: date;
+    white-space: nowrap;
   }
   .agenda__item .ev--sample {
     grid-area: kind;
@@ -293,4 +246,29 @@ a.ev:hover {
   .agenda__item .dday {
     grid-area: dday;
   }
+}
+
+/* notice you came from: green ring on its chips, dots and agenda row */
+.ev--highlight {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.dot--highlight {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+.agenda__item--highlight {
+  background: rgba(13, 143, 0, 0.08);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+.agenda__empty {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-muted);
+  font-style: italic;
+}
+.agenda__empty p {
+  margin: 0;
 }

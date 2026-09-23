@@ -23,6 +23,11 @@ export interface IngestDeps {
   limit?: number;
   /** Also re-analyze notices whose current analysis came from an older prompt version. Costs AI requests. */
   upgradePrompt?: boolean;
+  /**
+   * Called after a new/changed notice's analysis is saved, with its notices.id. Hook for
+   * profile matching → (future) notifications. Must not throw; errors are logged and ignored.
+   */
+  onAnalyzed?: (noticeId: number) => void;
 }
 
 export interface IngestStats {
@@ -111,6 +116,11 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
           `apply ${a.applicationStart ?? '?'} ~ ${a.applicationEnd ?? '?'}, deadline ${a.deadline ?? 'none'}, event ${a.eventDate ?? 'none'}`,
       );
       for (const w of result.validationWarnings) log(`[WARN] Notice ${id}: ${w}`);
+      try {
+        deps.onAnalyzed?.(rowId);
+      } catch (hookErr) {
+        log(`[WARN] Notice ${id}: onAnalyzed hook failed: ${describe(hookErr)}`);
+      }
     } catch (err) {
       if (err instanceof AiApiError && err.noRequestSent) {
         stats.aiStoppedReason = `AI unavailable: ${err.message}`;

@@ -1,72 +1,74 @@
-import { useMemo, useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useEffect, useMemo } from 'react';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { DdayBadge } from '../components/DdayBadge.tsx';
 import { StateMessage } from '../components/StateMessage.tsx';
 import { api, useApi } from '../lib/api.ts';
+import { eventsByDay, monthCells, nextEventAfter, shiftMonth } from '../lib/calendar.ts';
 import { shortDate, todayKst } from '../lib/dates.ts';
-import { EVENT_LABEL, noticeEvents, type NoticeEvent } from '../lib/events.ts';
+import { EVENT_LABEL } from '../lib/events.ts';
+import { scrollToTarget } from '../lib/smoothScroll.ts';
 import './CalendarPage.css';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const MAX_CHIPS = 3;
+const isDay = (s: string | null): s is string => !!s && /^\d{4}-\d{2}-\d{2}$/.test(s);
 
-const pad = (n: number) => String(n).padStart(2, '0');
-const key = (y: number, m: number, d: number) => `${y}-${pad(m)}-${pad(d)}`;
-
-/** All cells of the month grid (Sunday first), including leading/trailing days of adjacent months. */
-function monthCells(year: number, month: number) {
-  const first = new Date(Date.UTC(year, month - 1, 1));
-  const start = new Date(first);
-  start.setUTCDate(1 - first.getUTCDay());
-  const daysInMonth = new Date(Date.UTC(year, month, 0)).getUTCDate();
-  const weeks = Math.ceil((first.getUTCDay() + daysInMonth) / 7);
-  return Array.from({ length: weeks * 7 }, (_, i) => {
-    const d = new Date(start);
-    d.setUTCDate(start.getUTCDate() + i);
-    return { date: d.toISOString().slice(0, 10), day: d.getUTCDate(), inMonth: d.getUTCMonth() === month - 1 };
-  });
-}
-
-function shiftMonth(ym: string, delta: number) {
-  const [y, m] = ym.split('-').map(Number);
-  const d = new Date(Date.UTC(y, m - 1 + delta, 1));
-  return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}`;
-}
-
+/**
+ * Month view of application deadlines and event dates.
+ * URL state: ?month=YYYY-MM  &date=YYYY-MM-DD (selected day)  &notice=<id> (highlighted notice).
+ * Everything lives in the URL so calendar → notice → back restores the same view.
+ */
 export function CalendarPage() {
   const state = useApi(api.notices);
   const navigate = useNavigate();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const today = todayKst();
-  const ym = /^\d{4}-\d{2}$/.test(params.get('month') ?? '') ? params.get('month')! : today.slice(0, 7);
-  const [year, month] = ym.split('-').map(Number);
-  const [selected, setSelected] = useState<string | null>(null);
 
-  const setMonth = (next: string) => {
-    setSelected(null);
+  const selected = isDay(params.get('date')) ? params.get('date')! : null;
+  const monthParam = params.get('month');
+  const ym = monthParam && /^\d{4}-\d{2}$/.test(monthParam) ? monthParam : (selected?.slice(0, 7) ?? today.slice(0, 7));
+  const [year, month] = ym.split('-').map(Number);
+  const highlight = Number(params.get('notice')) || null;
+
+  const update = (next: { month?: string; date?: string | null; notice?: number | null }) =>
     setParams((p) => {
-      if (next === today.slice(0, 7)) p.delete('month');
-      else p.set('month', next);
+      if (next.month !== undefined) {
+        if (next.month === today.slice(0, 7)) p.delete('month');
+        else p.set('month', next.month);
+      }
+      if (next.date !== undefined) {
+        if (next.date) p.set('date', next.date);
+        else p.delete('date');
+      }
+      if (next.notice !== undefined) {
+        if (next.notice) p.set('notice', String(next.notice));
+        else p.delete('notice');
+      }
       return p;
     }, { replace: true, preventScrollReset: true });
-  };
+
+  const setMonth = (m: string) => update({ month: m, date: null, notice: null });
+  const selectDay = (d: string | null) => update({ date: d, notice: null });
 
   const notices = state.status === 'ok' ? state.data : [];
-  const byDay = useMemo(() => {
-    const map = new Map<string, NoticeEvent[]>();
-    for (const e of notices.flatMap(noticeEvents)) {
-      const k = e.date.slice(0, 10);
-      map.set(k, [...(map.get(k) ?? []), e]);
-    }
-    for (const list of map.values()) list.sort((a, b) => (a.kind === b.kind ? a.date.localeCompare(b.date) : a.kind === 'deadline' ? -1 : 1));
-    return map;
-  }, [notices]);
-
+  const byDay = useMemo(() => eventsByDay(notices), [notices]);
   const cells = monthCells(year, month);
-  const monthEvents = cells.filter((c) => c.inMonth).flatMap((c) => (byDay.get(c.date) ?? []).map((e) => ({ ...e, day: c.date })));
-  const agenda = selected ? monthEvents.filter((e) => e.day === selected) : monthEvents;
+  const monthEvents = cells.filter((c) => c.inMonth).flatMap((c) => byDay.get(c.date) ?? []);
+  const agenda = selected ? (byDay.get(selected) ?? []) : monthEvents;
   const pending = notices.filter((n) => n.analysisStatus === 'pending').length;
+  const next = monthEvents.length === 0 ? nextEventAfter(notices, `${ym}-01`) : null;
+  // Where the notice page's back link should return to (this exact calendar view).
+  const from = `${location.pathname}${location.search}`;
+
+  // Arriving from a notice (?notice=): bring its agenda entry into view once data is loaded.
+  useEffect(() => {
+    if (state.status === 'ok' && highlight) {
+      const el = document.querySelector<HTMLElement>(`.agenda [data-notice="${highlight}"]`);
+      if (el) setTimeout(() => scrollToTarget(el, -120), 150);
+    }
+  }, [state.status, highlight]);
 
   return (
     <section className="cal">
@@ -83,7 +85,7 @@ export function CalendarPage() {
           <button type="button" className="pill" onClick={() => setMonth(shiftMonth(ym, -1))} aria-label="이전 달">
             ←
           </button>
-          <button type="button" className="pill" aria-pressed={ym === today.slice(0, 7)} onClick={() => setMonth(today.slice(0, 7))}>
+          <button type="button" className="pill" aria-pressed={ym === today.slice(0, 7) && !selected} onClick={() => setMonth(today.slice(0, 7))}>
             오늘
           </button>
           <button type="button" className="pill" onClick={() => setMonth(shiftMonth(ym, 1))} aria-label="다음 달">
@@ -130,7 +132,7 @@ export function CalendarPage() {
                   <button
                     type="button"
                     className="grid__day"
-                    onClick={() => setSelected(selected === c.date ? null : c.date)}
+                    onClick={() => selectDay(selected === c.date ? null : c.date)}
                     aria-label={`${c.date} 일정 ${events.length}개`}
                     aria-pressed={selected === c.date}
                     disabled={!c.inMonth}
@@ -142,21 +144,26 @@ export function CalendarPage() {
                       <ul className="grid__events">
                         {events.slice(0, MAX_CHIPS).map((e) => (
                           <li key={`${e.notice.id}-${e.kind}`}>
-                            <Link to={`/notices/${e.notice.id}`} className={`ev ev--${e.kind}`} title={`[${EVENT_LABEL[e.kind]}] ${e.notice.title}`}>
+                            <Link
+                              to={`/notices/${e.notice.id}`}
+                              state={{ from }}
+                              className={`ev ev--${e.kind}${highlight === e.notice.id ? ' ev--highlight' : ''}`}
+                              title={`[${EVENT_LABEL[e.kind]}] ${e.notice.title}`}
+                            >
                               {e.notice.title}
                             </Link>
                           </li>
                         ))}
                       </ul>
                       {events.length > MAX_CHIPS && (
-                        <button type="button" className="grid__more" onClick={() => setSelected(c.date)}>
+                        <button type="button" className="grid__more" onClick={() => selectDay(c.date)}>
                           +{events.length - MAX_CHIPS}
                         </button>
                       )}
                       {/* compact markers for narrow screens */}
                       <span className="grid__dots" aria-hidden>
                         {events.map((e) => (
-                          <i key={`${e.notice.id}-${e.kind}`} className={`dot dot--${e.kind}`} />
+                          <i key={`${e.notice.id}-${e.kind}`} className={`dot dot--${e.kind}${highlight === e.notice.id ? ' dot--highlight' : ''}`} />
                         ))}
                       </span>
                     </>
@@ -170,18 +177,34 @@ export function CalendarPage() {
             <div className="agenda__head">
               <h2 className="agenda__title">{selected ? `${shortDate(selected)} 일정` : `${month}월 일정`}</h2>
               {selected && (
-                <button type="button" className="pill" onClick={() => setSelected(null)}>
+                <button type="button" className="pill" onClick={() => selectDay(null)}>
                   {month}월 전체 보기
                 </button>
               )}
             </div>
             {agenda.length === 0 ? (
-              <p className="agenda__empty">{selected ? '이 날에는 일정이 없어요.' : '이번 달에는 표시할 일정이 없어요.'}</p>
+              <div className="agenda__empty">
+                <p>{selected ? '이 날에는 일정이 없어요.' : '이번 달에는 표시할 일정이 없어요.'}</p>
+                {!selected && next && (
+                  <button
+                    type="button"
+                    className="pill"
+                    onClick={() => update({ month: next.date.slice(0, 7), date: next.date.slice(0, 10), notice: next.notice.id })}
+                  >
+                    다음 일정 · {shortDate(next.date)} →
+                  </button>
+                )}
+              </div>
             ) : (
               <ul className="agenda__list">
                 {agenda.map((e) => (
                   <li key={`${e.notice.id}-${e.kind}`}>
-                    <button type="button" className="agenda__item" onClick={() => navigate(`/notices/${e.notice.id}`)}>
+                    <button
+                      type="button"
+                      data-notice={e.notice.id}
+                      className={`agenda__item${highlight === e.notice.id ? ' agenda__item--highlight' : ''}`}
+                      onClick={() => navigate(`/notices/${e.notice.id}`, { state: { from } })}
+                    >
                       <span className="agenda__date">{shortDate(e.date)}</span>
                       <span className={`ev ev--${e.kind} ev--sample`}>{EVENT_LABEL[e.kind]}</span>
                       <span className="agenda__name">

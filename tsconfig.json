@@ -7,7 +7,21 @@
     "noEmit": true,
     "strict": true,
     "skipLibCheck": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ],
+    "paths": {
+      "@shared/*": [
+        "./src/*"
+      ]
+    }
   },
-  "include": ["src", "test"]
+  "include": [
+    "src",
+    "test",
+    "web/src/lib/calendar.ts",
+    "web/src/lib/events.ts",
+    "web/src/lib/personalize.ts",
+    "web/src/lib/dates.ts"
+  ]
 }

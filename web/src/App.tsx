@@ -6,6 +6,7 @@ import { CalendarPage } from './pages/CalendarPage.tsx';
 import { NoticeDetailPage } from './pages/NoticeDetailPage.tsx';
 import { NoticeListPage } from './pages/NoticeListPage.tsx';
 import { Placeholder } from './pages/Placeholder.tsx';
+import { ProfilePage } from './pages/ProfilePage.tsx';
 
 export function App() {
   useSmoothScroll();
@@ -21,6 +22,7 @@ export function App() {
           <Route path="/" element={<NoticeListPage />} />
           <Route path="/notices/:id" element={<NoticeDetailPage />} />
           <Route path="/calendar" element={<CalendarPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="*" element={<Placeholder title="페이지를 찾을 수 없어요" />} />
         </Routes>
       </main>

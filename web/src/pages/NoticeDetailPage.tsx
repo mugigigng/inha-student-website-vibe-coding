@@ -1,13 +1,14 @@
 import type { NoticeDetail } from '@shared/api/types.ts';
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { DdayBadge } from '../components/DdayBadge.tsx';
 import { LanguageToggle } from '../components/LanguageToggle.tsx';
 import { deadlineOf } from '../components/NoticeCard.tsx';
 import { StateMessage } from '../components/StateMessage.tsx';
 import { api, useApi } from '../lib/api.ts';
+import { calendarHref } from '../lib/calendar.ts';
 import { CATEGORY_TINT } from '../lib/categories.ts';
-import { dday, fullDate, shortDate } from '../lib/dates.ts';
+import { dday, fullDate, shortDate, todayKst } from '../lib/dates.ts';
 import { categoryName, TEXT, type Lang } from '../lib/i18n.ts';
 import { downloadIcs } from '../lib/ics.ts';
 import './NoticeDetailPage.css';
@@ -25,11 +26,14 @@ export function NoticeDetailPage() {
       return p;
     }, { replace: true, preventScrollReset: true });
   const t = TEXT[lang];
+  // Came from the calendar? Go back to that exact view (month/day/highlight), else to the list.
+  const from = (useLocation().state as { from?: string } | null)?.from;
+  const fromCalendar = from?.startsWith('/calendar');
 
   return (
     <article className="detail" lang={lang}>
-      <Link to="/" className="pill detail__back">
-        {t.back}
+      <Link to={fromCalendar ? from! : '/'} className="pill detail__back">
+        {fromCalendar ? t.backToCalendar : t.back}
       </Link>
       {state.status === 'loading' && <StateMessage title={t.loading} />}
       {state.status === 'error' &&
@@ -54,6 +58,7 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
   const [showAllSummary, setShowAllSummary] = useState(false);
   const [calendarMsg, setCalendarMsg] = useState<'done' | 'none' | null>(null);
   const hasDates = Boolean(deadline || a?.eventDate);
+  const calendarLink = calendarHref(notice, todayKst());
 
   // English content comes from the backend (analysis.en, prompt v3+). If it is missing,
   // show the Korean original with a note — never translate on the client.
@@ -202,6 +207,11 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
               <button type="button" className="pill pill--solid" onClick={() => setCalendarMsg(downloadIcs(notice) ? 'done' : 'none')} disabled={!hasDates}>
                 {t.addToCalendar}
               </button>
+              {calendarLink && (
+                <Link to={calendarLink} className="pill">
+                  {t.viewInCalendar} →
+                </Link>
+              )}
               <a href={notice.sourceUrl} target="_blank" rel="noreferrer" className="pill">
                 {t.viewOriginalShort}
               </a>

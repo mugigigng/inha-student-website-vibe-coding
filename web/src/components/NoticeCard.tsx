@@ -1,4 +1,5 @@
 import type { NoticeListItem } from '@shared/api/types.ts';
+import type { MatchResult } from '@shared/match.ts';
 import { Link } from 'react-router-dom';
 import { CATEGORY_TINT, PENDING_FILTER } from '../lib/categories.ts';
 import { fullDate, period, shortDate } from '../lib/dates.ts';
@@ -8,7 +9,8 @@ import './NoticeCard.css';
 /** The deadline a student cares about: explicit deadline, else end of the application period. */
 export const deadlineOf = (n: NoticeListItem) => n.analysis?.deadline ?? n.analysis?.applicationEnd ?? null;
 
-export function NoticeCard({ notice }: { notice: NoticeListItem }) {
+/** `match` is only passed in the personalized section; the all-notices grid renders plain cards. */
+export function NoticeCard({ notice, match }: { notice: NoticeListItem; match?: MatchResult }) {
   const a = notice.analysis;
   const deadline = deadlineOf(notice);
   const applyPeriod = a ? period(a.applicationStart, a.applicationEnd) : null;
@@ -25,6 +27,13 @@ export function NoticeCard({ notice }: { notice: NoticeListItem }) {
         )}
         <DdayBadge deadline={deadline} />
       </div>
+
+      {match && match.matchReasons.length > 0 && (
+        <p className="card__match">
+          <span aria-hidden>⭐</span> {match.matchReasons.slice(0, 2).join(' · ')}
+          {match.basedOnTitleOnly && <span className="card__match-note"> (제목 기준)</span>}
+        </p>
+      )}
 
       <h3 className="card__title">
         {/* stretched link: the whole card opens the detail page */}

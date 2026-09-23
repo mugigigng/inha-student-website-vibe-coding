@@ -25,6 +25,8 @@ export const categoryName = (c: Category, lang: Lang) => (lang === 'en' ? CATEGO
 
 const ko = {
   back: '← 공지 목록',
+  backToCalendar: '← 캘린더',
+  viewInCalendar: '캘린더에서 보기',
   boardCategory: '게시판 분류',
   posted: '게시',
   viewOriginal: '인하대 원문 보기 ↗',
@@ -72,6 +74,8 @@ const ko = {
 
 const en: typeof ko = {
   back: '← All notices',
+  backToCalendar: '← Calendar',
+  viewInCalendar: 'View in calendar',
   boardCategory: 'Board category',
   posted: 'Posted',
   viewOriginal: 'Original notice (Korean) ↗',

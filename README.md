@@ -1,4 +1,4 @@
-# Inha notices
+# Inha Insight (인하 인사이트)
 
 **Live site: https://yaminmamamyo-maw.github.io/inha-student-website-vibe-coding/**
 

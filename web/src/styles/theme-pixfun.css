@@ -1,0 +1,369 @@
+/*
+ * TEST THEME — inspired by pixfun.app.
+ * Only active with <html data-theme="pixfun"> (the default in index.html; `?theme=soulbound` or
+ * `?theme=gchf` switch and are remembered). Re-points the design tokens and restyles shared surfaces.
+ *
+ * Source traits: cream #fbfaf5 page, navy ink #1e2233, Fredoka display + Nunito text (semibold),
+ * white 22px cards with hairline + soft shadow, floating white pill header, gradient CTA
+ * (re-coloured blue: #8fd3ff → #2db6ff → #1a7fd6) with a glow, purple → pink → blue gradient headline word,
+ * pastel tints, small tracked label pills, coloured number circles, faint pixel grid in the hero.
+ */
+:root[data-theme='pixfun'] {
+  --ink: #1e2233;
+  --ink-soft: #3a3f55;
+  --ink-muted: #6e7084; /* pixfun's #8b8c99, darkened for AA text contrast */
+  --paper: #fbfaf5;
+  --paper-raised: #ffffff;
+  --card: #ffffff;
+  --mint: #e9f9f2;
+  --lavender: #efecfc;
+  --sand: #bfe4ff; /* selection: light sky */
+  --accent: #1a8fcc; /* accent-dark: readable blue for text/hover */
+  --hero: #8c7ae6; /* purple: event chips, labels */
+  --urgent: #ff5c7a;
+  --black: #1e2233; /* active pill = ink */
+  --rule: #ececee;
+  --rule-soft: #f1f1f3;
+  --surface: #ffffff;
+  --on-dark: #ffffff;
+  --hover-wash: rgba(45, 182, 255, 0.06);
+  --band-soft: #ffffff;
+  --cell-out: #f6f5f0;
+  --today-wash: rgba(45, 182, 255, 0.12);
+  --nav-fade: rgba(251, 250, 245, 0);
+  --tint-event: #ffe0e7;
+  --tint-career: #dde5ff; /* periwinkle */
+  --tint-intl: #d9f0ff;
+  --tint-life: #f1f0ec;
+
+  --font-sans: 'Nunito', 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --font-display: 'Fredoka', 'Nunito', 'IBM Plex Sans KR', sans-serif;
+  --radius: 22px;
+  --shadow-soft: 0 6px 18px rgba(20, 24, 40, 0.07);
+  --shadow-lift: 0 14px 34px -10px rgba(20, 24, 40, 0.16);
+  --cta: linear-gradient(135deg, #8fd3ff 0%, #2db6ff 55%, #1a7fd6 100%); /* sky → azure → deep */
+  --cta-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 6px 18px rgba(26, 127, 214, 0.32);
+  --rainbow: linear-gradient(100deg, #8c7ae6, #ff5c7a 55%, #2d7ff9); /* ends in royal blue */
+}
+
+/* ---------- type ---------- */
+[data-theme='pixfun'] body {
+  font-weight: 600;
+}
+:root[data-theme='pixfun'] body * {
+  font-style: normal; /* (0,2,1): beats the gchf component italics */
+}
+[data-theme='pixfun'] .hero__title,
+[data-theme='pixfun'] .section-head__title,
+[data-theme='pixfun'] .list__title,
+[data-theme='pixfun'] .cal__title,
+[data-theme='pixfun'] .agenda__title,
+[data-theme='pixfun'] .profile__title,
+[data-theme='pixfun'] .notif__title,
+[data-theme='pixfun'] .detail__title,
+[data-theme='pixfun'] .detail__h2,
+[data-theme='pixfun'] .card__title,
+[data-theme='pixfun'] .nav__brand,
+[data-theme='pixfun'] .hero__stats dd,
+[data-theme='pixfun'] .pill,
+[data-theme='pixfun'] .lang__btn {
+  font-family: var(--font-display);
+  letter-spacing: -0.01em;
+}
+[data-theme='pixfun'] .hero__title {
+  font-weight: 600;
+  font-size: clamp(46px, 7.2vw, 96px);
+  line-height: 1;
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+[data-theme='pixfun'] .hero__title em,
+[data-theme='pixfun'] .cal__title em,
+[data-theme='pixfun'] .list__title em {
+  background: var(--rainbow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+[data-theme='pixfun'] .cal__title {
+  font-weight: 600;
+  font-size: clamp(38px, 6vw, 80px);
+  letter-spacing: -0.025em;
+  color: var(--ink);
+}
+[data-theme='pixfun'] .section-head__title,
+[data-theme='pixfun'] .list__title {
+  font-weight: 600;
+  font-size: calc(var(--text-display) + 4px);
+}
+[data-theme='pixfun'] .profile__title,
+[data-theme='pixfun'] .notif__title {
+  font-weight: 600;
+  font-size: clamp(24px, 3vw, 34px);
+  line-height: 1.3;
+}
+[data-theme='pixfun'] .detail__title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+[data-theme='pixfun'] .detail__h2 {
+  font-weight: 600;
+  color: var(--ink);
+}
+[data-theme='pixfun'] .card__title {
+  font-weight: 600;
+  color: var(--ink);
+}
+[data-theme='pixfun'] .hero__stats dd {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* small tracked label pills (pixfun's "HOW IT WORKS") */
+[data-theme='pixfun'] .hero__eyebrow,
+[data-theme='pixfun'] .cal__eyebrow,
+[data-theme='pixfun'] .profile__eyebrow,
+[data-theme='pixfun'] .notif__eyebrow {
+  display: inline-block;
+  width: fit-content;
+  padding: 3px 12px;
+  border-radius: var(--pill);
+  background: rgba(143, 211, 255, 0.45); /* light sky label pill */
+  font-family: var(--font-display);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+}
+[data-theme='pixfun'] .hero__stats dt,
+[data-theme='pixfun'] .card__ai,
+[data-theme='pixfun'] .dates__row dt,
+[data-theme='pixfun'] .grid__wd {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  font-size: var(--text-tiny);
+}
+[data-theme='pixfun'] .card__ai {
+  color: var(--hero);
+}
+
+/* ---------- buttons ---------- */
+[data-theme='pixfun'] .pill {
+  padding: 6px 16px;
+  border: 1px solid var(--rule);
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+  font-weight: 600;
+  font-size: var(--text-small);
+  transition: color 0.15s, background-color 0.15s, box-shadow 0.15s, transform 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+[data-theme='pixfun'] .pill:hover {
+  color: var(--ink);
+  border-color: var(--rule);
+  background: #eef6ff;
+  transform: translateY(-1px);
+}
+[data-theme='pixfun'] .pill[aria-current='page'],
+[data-theme='pixfun'] .pill[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: #fff;
+  box-shadow: 0 6px 16px -6px rgba(30, 34, 51, 0.45);
+}
+/* primary action = pixfun's "Get the app" button, in blue */
+[data-theme='pixfun'] .pill--solid,
+[data-theme='pixfun'] .pill--solid:hover {
+  border: 0;
+  padding: 7px 20px;
+  background: var(--cta);
+  color: var(--ink);
+  box-shadow: var(--cta-shadow);
+}
+[data-theme='pixfun'] .pill--solid:hover {
+  filter: brightness(1.04);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.4), 0 10px 24px rgba(26, 127, 214, 0.42);
+}
+
+[data-theme='pixfun'] .lang {
+  border: 1px solid var(--rule);
+  box-shadow: var(--shadow-soft);
+}
+[data-theme='pixfun'] .lang__btn {
+  font-weight: 600;
+}
+[data-theme='pixfun'] .lang__btn[aria-pressed='true'] {
+  background: var(--cta);
+  color: var(--ink);
+}
+
+/* ---------- nav: floating white pill bar ---------- */
+[data-theme='pixfun'] .nav nav {
+  padding: 5px;
+  border: 1px solid var(--rule);
+  border-radius: var(--pill);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(10px);
+  box-shadow: var(--shadow-soft);
+}
+[data-theme='pixfun'] .nav nav .pill {
+  border-color: transparent;
+  background: transparent;
+  box-shadow: none;
+}
+[data-theme='pixfun'] .nav nav .pill[aria-current='page'] {
+  background: var(--cta);
+  color: var(--ink);
+  box-shadow: var(--cta-shadow);
+}
+[data-theme='pixfun'] .nav__brand {
+  font-size: 22px;
+  font-weight: 700;
+}
+[data-theme='pixfun'] .nav__brand em {
+  background: var(--rainbow);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ---------- hero: pastel wash + faint pixel grid ---------- */
+[data-theme='pixfun'] .hero {
+  border-bottom: 0;
+  background:
+    linear-gradient(rgba(255, 92, 122, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+    linear-gradient(90deg, rgba(255, 92, 122, 0.07) 1px, transparent 1px) 0 0 / 24px 24px,
+    radial-gradient(70% 90% at 80% 20%, rgba(140, 122, 230, 0.16), transparent 70%),
+    linear-gradient(180deg, #fdeef0 0%, var(--paper) 100%);
+}
+
+/* ---------- cards & panels ---------- */
+[data-theme='pixfun'] .card,
+[data-theme='pixfun'] .detail__aside,
+[data-theme='pixfun'] .state {
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+}
+[data-theme='pixfun'] .card:hover,
+[data-theme='pixfun'] .card:focus-within {
+  background: #fff;
+  border-color: var(--rule);
+  box-shadow: var(--shadow-lift);
+}
+[data-theme='pixfun'] .card:hover .card__title {
+  color: var(--accent);
+}
+[data-theme='pixfun'] .card__match {
+  color: #2f5bd3; /* cobalt "for you" note on white */
+}
+[data-theme='pixfun'] .foryou {
+  margin: 8px var(--gutter) 0;
+  border: 0;
+  border-radius: 28px;
+  background: linear-gradient(135deg, #dff1ff 0%, #ffeef2 55%, #efecfc 100%); /* ice blue → pink → lavender */
+}
+[data-theme='pixfun'] .detail__easy {
+  border-radius: var(--radius);
+  background: #eef8ff;
+}
+
+/* ---------- chips, badges, events ---------- */
+[data-theme='pixfun'] .chip {
+  border: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+}
+[data-theme='pixfun'] .chip--pending {
+  border: 1px dashed var(--ink-muted);
+}
+[data-theme='pixfun'] .dday {
+  font-family: var(--font-display);
+}
+[data-theme='pixfun'] .dday--open {
+  border-color: #3dd9a4;
+  color: #138a63;
+  background: #e9f9f2;
+}
+[data-theme='pixfun'] .ev {
+  border-radius: 8px;
+  font-weight: 700;
+}
+[data-theme='pixfun'] .ev--event {
+  background: #f3f0ff;
+}
+[data-theme='pixfun'] .grid {
+  overflow: hidden;
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  background: #fff;
+  box-shadow: var(--shadow-soft);
+}
+[data-theme='pixfun'] .grid__cell--today .grid__day {
+  background: var(--cta);
+  color: var(--ink);
+  box-shadow: var(--cta-shadow);
+}
+
+/* numbered summary = pixfun's coloured step circles */
+[data-theme='pixfun'] .detail__summary li {
+  grid-template-columns: 40px 1fr;
+}
+[data-theme='pixfun'] .detail__summary li::before {
+  content: counter(s);
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  margin-top: 2px;
+  border-radius: 50%;
+  background: #4f6bed; /* indigo */
+  color: #fff;
+  font-size: var(--text-tiny);
+  font-weight: 700;
+}
+[data-theme='pixfun'] .detail__summary li:nth-child(3n + 2)::before {
+  background: #2db6ff;
+  color: #fff;
+}
+[data-theme='pixfun'] .detail__summary li:nth-child(3n)::before {
+  background: #ff5c7a;
+  color: #fff;
+}
+
+/* ---------- forms ---------- */
+[data-theme='pixfun'] .field select {
+  border: 1px solid var(--rule);
+  border-radius: 14px;
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---------- misc ---------- */
+[data-theme='pixfun'] .scroll-progress {
+  height: 3px;
+  background: var(--rainbow);
+}
+[data-theme='pixfun'] .hero__cue {
+  font-family: var(--font-display);
+  color: var(--ink-muted);
+}
+[data-theme='pixfun'] .notif__item--relevant {
+  background: #eaf4ff;
+}
+[data-theme='pixfun'] .site-foot {
+  border-top-color: var(--rule);
+}
+
+@media (max-width: 760px) {
+  [data-theme='pixfun'] .nav nav {
+    justify-content: center;
+  }
+  /* pixfun's hero is compact: no near-empty full-screen band on phones */
+  [data-theme='pixfun'] .hero {
+    min-height: 0;
+    padding-top: 84px;
+  }
+}

@@ -41,9 +41,22 @@
   animation-timeline: scroll(root);
   animation-range: 0 90vh;
 }
+/* Hangul is taller than Latin: the tight display line-height would make 인하 / 인사이트 overlap.
+   (0,2,1) so it also wins over the theme files' [data-theme] .hero__title (0,2,0). */
+html[lang='ko'] .hero__title {
+  line-height: 1.08;
+}
 .hero__title em {
   font-weight: 400;
   padding-left: 0.6em;
+}
+.hero__tagline {
+  margin: 14px 0 0;
+  font-size: clamp(17px, 1.8vw, 24px);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: var(--ink-muted);
 }
 @keyframes hero-drift {
   to {
@@ -57,14 +70,6 @@
   align-items: flex-end;
   gap: 24px;
   margin-top: 28px;
-}
-.hero__hello {
-  margin: 0;
-  font-size: var(--text-display);
-  line-height: 1.4;
-}
-.hero__hello strong {
-  font-weight: 600;
 }
 .hero__lede {
   margin: 6px 0 0;

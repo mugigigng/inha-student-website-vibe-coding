@@ -39,9 +39,10 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  // <html lang> for screen readers, fonts and hyphenation
+  // <html lang> for screen readers, fonts and hyphenation; tab title in the same language
   useEffect(() => {
     document.documentElement.lang = lang;
+    document.title = lang === 'en' ? `${translations.en.siteName} · ${translations.ko.siteName}` : `${translations.ko.siteName} · ${translations.en.siteName}`;
   }, [lang]);
 
   // keep other tabs in sync

@@ -4,14 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="인하대학교 공지사항을 AI로 정리해 마감일과 일정을 한눈에" />
-    <title>인하 공지 · Inha Notices</title>
+    <title>인하 인사이트 · Inha Insight</title>
     <script>
-      // Design test: soulbound-inspired theme by default; ?theme=gchf (or ?theme=soulbound) switches and is remembered.
+      // Design test: duten-inspired theme by default; ?theme=duten / pixfun / mix / soulbound / gchf switch and are remembered.
       (function () {
-        var t = 'soulbound';
+        var t = 'duten';
         try {
           var q = new URLSearchParams(location.search).get('theme');
-          if (q === 'gchf' || q === 'soulbound') localStorage.setItem('appTheme', q);
+          if (['gchf', 'soulbound', 'pixfun', 'mix', 'duten'].indexOf(q) >= 0) localStorage.setItem('appTheme', q);
           t = localStorage.getItem('appTheme') || t;
         } catch (e) {}
         if (t !== 'gchf') document.documentElement.dataset.theme = t;
@@ -20,7 +20,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Orbitron:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;1,9..144,400&family=IBM+Plex+Sans+KR:wght@400;500;600&family=Orbitron:wght@500;600;700;800&family=Space+Grotesk:wght@400;500;600&family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&family=Inter+Tight:wght@500;600&display=swap"
       rel="stylesheet"
     />
   </head>

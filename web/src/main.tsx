@@ -6,7 +6,10 @@ import { LanguageProvider } from './lib/language.tsx';
 import { ProfileProvider } from './lib/profile.tsx';
 import { SavedProvider } from './lib/saved.tsx';
 import './styles/base.css';
-import './styles/theme-soulbound.css'; // design test (see file header); remove to drop it
+import './styles/theme-soulbound.css'; // design tests (see file headers); each only applies to its data-theme
+import './styles/theme-pixfun.css';
+import './styles/theme-mix.css';
+import './styles/theme-duten.css';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>

@@ -39,7 +39,7 @@ export function buildIcs(notice: NoticeListItem, lang: Lang = 'ko'): string | nu
   const events = noticeEvents(notice);
   if (events.length === 0) return null;
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Inha notices//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Inha Insight//KO', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH'];
   for (const e of events) {
     const timed = e.date.length > 10;
     lines.push(

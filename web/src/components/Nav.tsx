@@ -14,7 +14,7 @@ export function Nav() {
   return (
     <header className="nav">
       <Link to="/" className="nav__brand" aria-label={t.nav.brandLabel}>
-        <span className="nav__brand-mark">Inha</span> <em>notices</em>
+        <span className="nav__brand-mark">{t.nav.brandMain}</span> <em>{t.nav.brandAccent}</em>
       </Link>
       <nav aria-label={t.nav.menu}>
         <ul className="nav__links">

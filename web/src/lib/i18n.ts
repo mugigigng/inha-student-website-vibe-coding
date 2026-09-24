@@ -51,6 +51,7 @@ export const matchReasons = (m: MatchResult, lang: Lang) => (lang === 'en' ? m.m
 const MONTHS_EN = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 
 const ko = {
+  siteName: '인하 인사이트',
   langGroup: '언어 선택',
   nav: {
     home: '홈',
@@ -59,7 +60,9 @@ const ko = {
     profile: '프로필',
     notifications: '알림',
     menu: '주요 메뉴',
-    brandLabel: '인하 공지 홈',
+    brandLabel: '인하 인사이트 홈',
+    brandMain: '인하',
+    brandAccent: '인사이트',
   },
   footer: {
     disclaimer: '인하대학교 공식 공지를 AI로 정리한 비공식 서비스예요. 중요한 내용은 꼭 원문에서 확인하세요.',
@@ -77,10 +80,11 @@ const ko = {
   },
   home: {
     eyebrow: 'Inha University · 공지사항',
-    hello: '안녕하세요',
+    titleMain: '인하',
+    titleAccent: '인사이트',
+    tagline: '나만을 위한 인하 공지',
     setupPrompt: '나에게 맞는 정보를 먼저 볼 수 있도록 프로필을 설정해주세요.',
     setupCta: '프로필 설정하기',
-    editProfile: '프로필 수정',
     statNotices: '공지',
     statAnalyzed: 'AI 분석 완료',
     statClosingSoon: '7일 내 마감',
@@ -244,6 +248,7 @@ const ko = {
 type Dict = typeof ko;
 
 const en: Dict = {
+  siteName: 'Inha Insight',
   langGroup: 'Language',
   nav: {
     home: 'Home',
@@ -252,7 +257,9 @@ const en: Dict = {
     profile: 'Profile',
     notifications: 'Notifications',
     menu: 'Main menu',
-    brandLabel: 'Inha notices home',
+    brandLabel: 'Inha Insight home',
+    brandMain: 'Inha',
+    brandAccent: 'Insight',
   },
   footer: {
     disclaimer: 'An unofficial service that organizes official Inha University notices with AI. Always confirm important details in the original notice.',
@@ -270,14 +277,15 @@ const en: Dict = {
   },
   home: {
     eyebrow: 'Inha University · Notices',
-    hello: 'Hello',
+    titleMain: 'Inha',
+    titleAccent: 'Insight',
+    tagline: 'Your Inha Information Hub',
     setupPrompt: 'Set up your profile to see the notices that fit you first.',
     setupCta: 'Set up profile',
-    editProfile: 'Edit profile',
     statNotices: 'Notices',
     statAnalyzed: 'Analyzed by AI',
     statClosingSoon: 'Closing in 7 days',
-    lastChecked: 'Inha notices last checked',
+    lastChecked: 'Inha notice board last checked',
     jumpToAll: 'Jump to all notices',
     forYouTitle: 'Recommended for You',
     forYouNote: (label: string) => `Based on your profile (${label}) · closed notices are hidden`,

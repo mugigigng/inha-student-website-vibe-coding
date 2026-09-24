@@ -45,7 +45,7 @@ export function App() {
       </main>
       <footer className="site-foot">
         <span>{t.footer.disclaimer}</span>
-        <span>© 2026 Inha notices</span>
+        <span>© 2026 {t.siteName}</span>
       </footer>
     </>
   );

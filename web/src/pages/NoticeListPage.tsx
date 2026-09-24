@@ -2,6 +2,7 @@ import type { NoticeListItem } from '@shared/api/types.ts';
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CategoryFilter, type FilterOption } from '../components/CategoryFilter.tsx';
+import { HeroParticles } from '../components/HeroParticles.tsx';
 import { LanguageToggle } from '../components/LanguageToggle.tsx';
 import { deadlineOf, NoticeCard } from '../components/NoticeCard.tsx';
 import { StateMessage } from '../components/StateMessage.tsx';
@@ -77,27 +78,22 @@ export function NoticeListPage() {
   return (
     <>
       <section className="hero">
+        {/* animated particle network behind the hero only; ends where "Recommended for You" starts */}
+        <HeroParticles />
         <div className="hero__top">
           <p className="hero__eyebrow">{t.home.eyebrow}</p>
           {/* app-wide language switch (lib/language.tsx): changes every page, not just this one */}
           <LanguageToggle />
         </div>
         <h1 className="hero__title">
-          <span>Notices,</span>
-          <em>understood.</em>
+          <span>{t.home.titleMain}</span>
+          <em>{t.home.titleAccent}</em>
         </h1>
+        <p className="hero__tagline">{t.home.tagline}</p>
         <div className="hero__foot">
+          {/* profile editing lives on /profile (nav); only first-time visitors get the setup prompt here */}
           <div className="hero__greeting">
             {!profile && (
-              <p className="hero__hello">
-                {t.home.hello} <span aria-hidden>👋</span>
-              </p>
-            )}
-            {profile ? (
-              <p className="hero__lede">
-                <Link to="/profile">{t.home.editProfile}</Link>
-              </p>
-            ) : (
               <p className="hero__lede">
                 {t.home.setupPrompt}{' '}
                 <Link to="/profile" className="pill pill--solid hero__cta">

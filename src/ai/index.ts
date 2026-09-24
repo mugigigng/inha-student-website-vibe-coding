@@ -13,7 +13,7 @@ export function createProvider(env = process.env): AiProvider {
   switch (name) {
     case 'gemini':
       return new GeminiProvider(requireKey(env, 'GEMINI_API_KEY'), env.GEMINI_MODEL || 'gemini-3.8-flash', {
-        fallbackModels: (env.GEMINI_FALLBACK_MODELS ?? 'gemini-3.7-flash,gemini-3.6-flash').split(',').map((m) => m.trim()).filter(Boolean),
+        fallbackModels: (env.GEMINI_FALLBACK_MODELS ?? 'gemini-3.7-flash,gemini-3.6-flash,gemini-3.5-flash').split(',').map((m) => m.trim()).filter(Boolean),
         cooldownFile: env.GEMINI_COOLDOWN_FILE ?? 'data/gemini-cooldown.json',
       });
     case 'openrouter':

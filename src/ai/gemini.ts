@@ -89,7 +89,7 @@ export class GeminiProvider implements AiProvider {
         resumeAt = Math.min(...chain.map((m) => this.cooldownUntil.get(m)!));
         const waitMs = resumeAt - now;
         if (waited || waitMs > MAX_WAIT_MS) break;
-        this.log(`[AI] All Gemini models rate-limited; waiting ${Math.ceil(waitMs / 1000)}s`);
+        this.log(`[AI] All Gemini models unavailable (rate-limited or overloaded); waiting ${Math.ceil(waitMs / 1000)}s`);
         await this.sleep(waitMs);
         waited = true;
         continue;

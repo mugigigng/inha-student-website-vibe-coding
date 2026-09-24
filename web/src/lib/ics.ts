@@ -1,5 +1,6 @@
 import type { NoticeListItem } from '@shared/api/types.ts';
-import { EVENT_LABEL, noticeEvents } from './events.ts';
+import { noticeTitle, translations, type Lang } from './i18n.ts';
+import { noticeEvents } from './events.ts';
 
 // "캘린더에 추가": a standard .ics file that Google / Apple / Outlook calendars import.
 // No account or backend needed. KST has no DST, so timed events convert to UTC with a fixed +9h.
@@ -33,7 +34,8 @@ function kstToUtc(d: string, addHours = 0) {
   return t.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
 }
 
-export function buildIcs(notice: NoticeListItem): string | null {
+export function buildIcs(notice: NoticeListItem, lang: Lang = 'ko'): string | null {
+  const t = translations[lang];
   const events = noticeEvents(notice);
   if (events.length === 0) return null;
   const stamp = new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
@@ -45,8 +47,8 @@ export function buildIcs(notice: NoticeListItem): string | null {
       `UID:inha-notice-${notice.sourceNoticeId}-${e.kind}@inha-notices`,
       `DTSTAMP:${stamp}`,
       ...(timed ? [`DTSTART:${kstToUtc(e.date)}`, `DTEND:${kstToUtc(e.date, 1)}`] : [`DTSTART;VALUE=DATE:${ymd(e.date)}`, `DTEND;VALUE=DATE:${nextDay(e.date)}`]),
-      `SUMMARY:${escape(`[${EVENT_LABEL[e.kind]}] ${notice.title}`)}`,
-      `DESCRIPTION:${escape(`AI가 공지에서 추출한 날짜예요. 반드시 원문에서 확인하세요.\n원문: ${notice.sourceUrl}`)}`,
+      `SUMMARY:${escape(`[${t.events[e.kind]}] ${noticeTitle(notice, lang)}`)}`,
+      `DESCRIPTION:${escape(`${t.ics.description}\n${t.ics.source}: ${notice.sourceUrl}`)}`,
       `URL:${notice.sourceUrl}`,
       'END:VEVENT',
     );
@@ -55,8 +57,8 @@ export function buildIcs(notice: NoticeListItem): string | null {
   return lines.map(fold).join('\r\n') + '\r\n';
 }
 
-export function downloadIcs(notice: NoticeListItem): boolean {
-  const ics = buildIcs(notice);
+export function downloadIcs(notice: NoticeListItem, lang: Lang = 'ko'): boolean {
+  const ics = buildIcs(notice, lang);
   if (!ics) return false;
   const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }));
   const a = Object.assign(document.createElement('a'), { href: url, download: `inha-notice-${notice.sourceNoticeId}.ics` });

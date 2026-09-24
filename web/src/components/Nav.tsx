@@ -1,24 +1,27 @@
 import { Link, NavLink } from 'react-router-dom';
+import { useLanguage } from '../lib/language.tsx';
 import './Nav.css';
 
 const LINKS = [
-  { to: '/', label: '공지', end: true },
-  { to: '/calendar', label: '캘린더', end: false },
-  { to: '/profile', label: '프로필', end: false },
-];
+  { to: '/', key: 'notices', end: true },
+  { to: '/calendar', key: 'calendar', end: false },
+  { to: '/notifications', key: 'notifications', end: false },
+  { to: '/profile', key: 'profile', end: false },
+] as const;
 
 export function Nav() {
+  const { t } = useLanguage();
   return (
     <header className="nav">
-      <Link to="/" className="nav__brand" aria-label="인하 공지 홈">
+      <Link to="/" className="nav__brand" aria-label={t.nav.brandLabel}>
         <span className="nav__brand-mark">Inha</span> <em>notices</em>
       </Link>
-      <nav aria-label="주요 메뉴">
+      <nav aria-label={t.nav.menu}>
         <ul className="nav__links">
           {LINKS.map((l) => (
             <li key={l.to}>
               <NavLink to={l.to} end={l.end} className="pill">
-                {l.label}
+                {t.nav[l.key]}
               </NavLink>
             </li>
           ))}

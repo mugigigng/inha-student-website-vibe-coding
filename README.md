@@ -11,8 +11,10 @@ The app crawls the official 공지사항 board. Gemini extracts the application 
 ## What's on the site
 
 - **Notice list:** category filter, newest or closing-soon sort, D-day badges (Korea time).
-- **Notice detail:** 3-line AI summary, plain explanation, eligibility, key dates with their source quotes, a Korean/English toggle, "캘린더에 추가" (downloads an `.ics` file), and a link to the original.
+- **Notice detail:** 3-line AI summary, plain explanation, eligibility, key dates with their source quotes, "캘린더에 추가" (adds it to the site's calendar under "내 일정 / My events", with an optional `.ics` export for phone calendars), and a link to the original.
 - **Calendar:** monthly view that separates application deadlines (black **마감**) from event dates (blue **일정**).
+- **Korean / English everywhere:** the 한국어 | English switch on the notice pages changes the whole app and is remembered in the browser. English notice content was written by Gemini together with the Korean analysis. Switching language never calls the AI.
+- **Profile and notifications:** an optional profile (department, major, year, interests) puts relevant notices first, and a notifications page lists recent notices, marking the ones that fit you. Nothing is ever hidden, and nothing is sent.
 
 Notices the AI hasn't analyzed yet are shown as "분석 대기" with a link to the original. They are never shown with guessed dates.
 

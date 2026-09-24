@@ -12,7 +12,7 @@
 .dday--urgent {
   background: var(--urgent);
   border-color: var(--urgent);
-  color: #fff;
+  color: var(--on-dark);
 }
 .dday--soon {
   background: var(--black);

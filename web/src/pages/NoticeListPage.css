@@ -9,6 +9,17 @@
   overflow: hidden;
   border-bottom: 1px solid var(--rule);
 }
+.hero__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  margin: 0 0 8px;
+}
+.hero__top .hero__eyebrow {
+  margin: 0;
+}
 .hero__eyebrow {
   margin: 0 0 8px;
   font-style: italic;
@@ -220,7 +231,7 @@
   margin-top: 0;
 }
 .foryou .card {
-  background: #f7faf6;
+  background: var(--band-soft);
 }
 .foryou__empty {
   margin: 0;

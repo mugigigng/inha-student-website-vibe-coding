@@ -17,6 +17,20 @@
   --urgent: #ff0083;           /* deadline today / tomorrow */
   --black: #111;               /* active pill fill */
   --rule: var(--ink);
+  --rule-soft: rgba(44, 22, 0, 0.18); /* hairlines inside lists/cards */
+  --surface: #fff;                     /* pills, inputs, toggles */
+  --on-dark: #fff;                     /* text on accent/urgent fills */
+  --hover-wash: rgba(255, 255, 255, 0.35);
+  --card: #f6f2ec;
+  --band-soft: #f7faf6;                /* cards on the mint band */
+  --cell-out: #ebe6de;                 /* calendar days outside the month */
+  --today-wash: rgba(13, 143, 0, 0.08);
+  --nav-fade: rgba(230, 224, 215, 0);
+  /* category chip tints */
+  --tint-event: #f3d6e4;
+  --tint-career: #e6e2c4;
+  --tint-intl: #cfdcf3;
+  --tint-life: #ece8e1;
 
   /* type */
   --font-sans: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;

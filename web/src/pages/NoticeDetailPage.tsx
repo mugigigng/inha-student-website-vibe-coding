@@ -1,6 +1,6 @@
 import type { NoticeDetail } from '@shared/api/types.ts';
 import { useState } from 'react';
-import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { DdayBadge } from '../components/DdayBadge.tsx';
 import { LanguageToggle } from '../components/LanguageToggle.tsx';
 import { deadlineOf } from '../components/NoticeCard.tsx';
@@ -9,23 +9,18 @@ import { api, useApi } from '../lib/api.ts';
 import { calendarHref } from '../lib/calendar.ts';
 import { CATEGORY_TINT } from '../lib/categories.ts';
 import { dday, fullDate, shortDate, todayKst } from '../lib/dates.ts';
-import { categoryName, TEXT, type Lang } from '../lib/i18n.ts';
+import { categoryName, type Lang } from '../lib/i18n.ts';
+import { useLanguage } from '../lib/language.tsx';
 import { downloadIcs } from '../lib/ics.ts';
+import { useSaved } from '../lib/saved.tsx';
 import './NoticeDetailPage.css';
 
 export function NoticeDetailPage() {
   const id = Number(useParams().id);
   const state = useApi((signal) => api.notice(id, signal), id);
-  // Language lives in the URL (?lang=en) so it survives refresh/share; Korean is the default.
-  const [params, setParams] = useSearchParams();
-  const lang: Lang = params.get('lang') === 'en' ? 'en' : 'ko';
-  const setLang = (l: Lang) =>
-    setParams((p) => {
-      if (l === 'ko') p.delete('lang');
-      else p.set('lang', l);
-      return p;
-    }, { replace: true, preventScrollReset: true });
-  const t = TEXT[lang];
+  // The global app language (lib/language.tsx); this page has no language state of its own.
+  const { lang, t: all } = useLanguage();
+  const t = all.notice;
   // Came from the calendar? Go back to that exact view (month/day/highlight), else to the list.
   const from = (useLocation().state as { from?: string } | null)?.from;
   const fromCalendar = from?.startsWith('/calendar');
@@ -40,25 +35,30 @@ export function NoticeDetailPage() {
         (state.error === 'Notice not found' ? (
           <StateMessage title={t.notFound}>{t.notFoundBody}</StateMessage>
         ) : (
-          <StateMessage title={t.loadError} action={{ label: t.retry, onClick: state.retry }}>
+          <StateMessage title={t.loadError} action={{ label: all.common.retry, onClick: state.retry }}>
             {state.error}
           </StateMessage>
         ))}
       {state.status === 'ok' && (
-        <Detail notice={state.data} lang={lang} toggle={<LanguageToggle value={lang} onChange={setLang} label={t.langGroup} />} />
+        <Detail notice={state.data} lang={lang} />
       )}
     </article>
   );
 }
 
-function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; toggle: React.ReactNode }) {
-  const t = TEXT[lang];
+function Detail({ notice, lang }: { notice: NoticeDetail; lang: Lang }) {
+  const { t: all } = useLanguage();
+  const t = all.notice;
   const a = notice.analysis;
   const deadline = deadlineOf(notice);
   const [showAllSummary, setShowAllSummary] = useState(false);
-  const [calendarMsg, setCalendarMsg] = useState<'done' | 'none' | null>(null);
+  const [calendarMsg, setCalendarMsg] = useState<'added' | 'removed' | 'ics' | null>(null);
   const hasDates = Boolean(deadline || a?.eventDate);
-  const calendarLink = calendarHref(notice, todayKst());
+  // "캘린더에 추가" saves the notice to the in-app calendar ("내 일정"); .ics export stays as a secondary option.
+  const { isSaved, add, remove } = useSaved();
+  const saved = isSaved(notice.id);
+  const baseLink = calendarHref(notice, todayKst());
+  const calendarLink = baseLink && saved ? `${baseLink}&view=mine` : baseLink;
 
   // English content comes from the backend (analysis.en, prompt v3+). If it is missing,
   // show the Korean original with a note — never translate on the client.
@@ -75,18 +75,21 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
       <header className="detail__head">
         <div className="detail__tags">
           {a ? (
-            <span className="chip" style={{ background: CATEGORY_TINT[a.category] }}>
+            <span className="chip" style={{ background: CATEGORY_TINT[a.category] }} title={t.category}>
               {categoryName(a.category, lang)}
             </span>
           ) : (
-            <span className="chip chip--pending">{t.pendingChip}</span>
+            <span className="chip chip--pending">{all.common.pending}</span>
           )}
           {notice.boardCategory && (
             <span className="detail__board">
               {t.boardCategory} · <span lang="ko">{notice.boardCategory}</span>
             </span>
           )}
-          <span className="detail__lang">{toggle}</span>
+          {/* same global toggle as the nav, repeated here for discoverability */}
+          <span className="detail__lang">
+            <LanguageToggle />
+          </span>
         </div>
         <h1 className="detail__title" lang={contentLang}>
           {title}
@@ -97,7 +100,7 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
           </p>
         )}
         <p className="detail__meta">
-          {t.posted} {notice.publishedAt ? fullDate(notice.publishedAt) : '—'}
+          {t.posted} {notice.publishedAt ? fullDate(notice.publishedAt, lang) : '—'}
           {notice.author && <> · <span lang="ko">{notice.author}</span></>} ·{' '}
           <a href={notice.sourceUrl} target="_blank" rel="noreferrer">
             {t.viewOriginal}
@@ -204,9 +207,15 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
               <DateRow lang={lang} label={t.event} value={a.eventDate} quote={a.evidence.eventDate} info={en?.eventInfo ?? null} />
             </dl>
             <div className="detail__actions">
-              <button type="button" className="pill pill--solid" onClick={() => setCalendarMsg(downloadIcs(notice) ? 'done' : 'none')} disabled={!hasDates}>
-                {t.addToCalendar}
-              </button>
+              {saved ? (
+                <button type="button" className="pill" aria-pressed onClick={() => (remove(notice.id), setCalendarMsg('removed'))}>
+                  {t.removeFromCalendar}
+                </button>
+              ) : (
+                <button type="button" className="pill pill--solid" onClick={() => (add(notice.id), setCalendarMsg('added'))} disabled={!hasDates}>
+                  {t.addToCalendar}
+                </button>
+              )}
               {calendarLink && (
                 <Link to={calendarLink} className="pill">
                   {t.viewInCalendar} →
@@ -216,13 +225,19 @@ function Detail({ notice, lang, toggle }: { notice: NoticeDetail; lang: Lang; to
                 {t.viewOriginalShort}
               </a>
             </div>
+            {saved && calendarMsg !== 'added' && <p className="detail__saved">{t.inMyCalendar}</p>}
             {calendarMsg && (
               <p className="detail__hint" role="status">
-                {calendarMsg === 'done' ? t.icsDone : t.icsNone}
+                {calendarMsg === 'added' ? t.added : calendarMsg === 'removed' ? t.removed : t.icsDone}
               </p>
             )}
+            {hasDates && (
+              <button type="button" className="detail__export" onClick={() => downloadIcs(notice, lang) && setCalendarMsg('ics')}>
+                {t.exportIcs}
+              </button>
+            )}
             {!hasDates && <p className="detail__hint">{t.noDates}</p>}
-            <p className="detail__ai-meta">{t.aiMeta(a.model, a.promptVersion, fullDate(a.analyzedAt))}</p>
+            <p className="detail__ai-meta">{t.aiMeta(a.model, a.promptVersion, fullDate(a.analyzedAt, lang))}</p>
           </aside>
         </div>
       )}
@@ -245,7 +260,7 @@ function DateRow({
   strong?: boolean;
   info?: string | null;
 }) {
-  const t = TEXT[lang];
+  const t = useLanguage().t.notice;
   return (
     <div className={`dates__row${strong ? ' dates__row--strong' : ''}`}>
       <dt>{label}</dt>
@@ -254,7 +269,7 @@ function DateRow({
           <>
             <span className="dates__value">
               {shortDate(value, lang)}
-              {strong && <DdayBadge deadline={value} lang={lang} />}
+              {strong && <DdayBadge deadline={value} />}
             </span>
             {info && <span className="dates__info">{info}</span>}
             {/* evidence stays in Korean: it is a verbatim quote of the source */}

@@ -9,16 +9,16 @@
   align-items: center;
   gap: 12px;
   padding: 12px 4px;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
   text-decoration: none;
   transition: color 0.2s, background-color 0.2s;
 }
 .upcoming li:last-child .upcoming__row {
-  border-bottom: 1px solid rgba(44, 22, 0, 0.18);
+  border-bottom: 1px solid var(--rule-soft);
 }
 .upcoming__row:hover {
   color: var(--accent);
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--hover-wash);
 }
 .upcoming__date {
   font-weight: 500;

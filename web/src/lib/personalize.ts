@@ -1,5 +1,6 @@
 import type { NoticeListItem } from '@shared/api/types.ts';
 import { matchNotice, type MatchResult } from '@shared/match.ts';
+import { buildNotification, type NotificationMessage } from '@shared/notifications.ts';
 import type { Profile } from '@shared/profile.ts';
 import { daysUntil } from './dates.ts';
 import { noticeEvents, type NoticeEvent } from './events.ts';
@@ -60,4 +61,18 @@ export function buildHome(notices: NoticeListItem[], profile: Profile | null, to
     .map((e) => ({ ...e, match: matches.get(e.notice.id) ?? null }));
 
   return { forYou, upcoming, all: notices };
+}
+
+export const NOTIFICATION_DAYS = 14;
+
+/**
+ * In-app notification list (nothing is sent): notices posted in the last NOTIFICATION_DAYS days,
+ * newest first. Each message carries both languages (titleKo/titleEn/bodyKo/bodyEn); the UI picks
+ * one with the global language. "relevant" = high profile match; without a profile everything is "new".
+ */
+export function buildNotifications(notices: NoticeListItem[], profile: Profile | null, today: string): NotificationMessage[] {
+  return notices
+    .filter((n) => n.publishedAt && daysUntil(n.publishedAt, today) <= 0 && daysUntil(n.publishedAt, today) > -NOTIFICATION_DAYS)
+    .map((n) => buildNotification(n, profile ? matchNotice(profile, n, today) : null))
+    .sort((a, b) => (b.publishedAt ?? '').localeCompare(a.publishedAt ?? '') || b.noticeId - a.noticeId);
 }

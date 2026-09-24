@@ -3,6 +3,7 @@ import { INTERESTS, type AcademicYear, type InterestId, type Profile } from '@sh
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { todayKst } from '../lib/dates.ts';
+import { useLanguage } from '../lib/language.tsx';
 import { useProfile } from '../lib/profile.tsx';
 import './ProfilePage.css';
 
@@ -11,6 +12,9 @@ const YEARS: AcademicYear[] = [1, 2, 3, 4];
 /** Lightweight profile form: 5 fields, no account. Saved to this browser only. */
 export function ProfilePage() {
   const { profile, save, clear } = useProfile();
+  // Only labels are localized. College/major names are the user's data (official Korean names) and stay as is.
+  const { lang, t: all } = useLanguage();
+  const t = all.profile;
   const navigate = useNavigate();
   const thisYear = Number(todayKst().slice(0, 4));
 
@@ -42,16 +46,13 @@ export function ProfilePage() {
 
   return (
     <section className="profile">
-      <p className="profile__eyebrow">내 프로필</p>
-      <h1 className="profile__title">나에게 맞는 정보를 먼저 볼 수 있도록 프로필을 설정해주세요.</h1>
-      <p className="profile__note">
-        설정한 프로필로 공지의 순서만 바꿔요. 모든 공지는 언제나 &lsquo;전체 공지&rsquo;에서 볼 수 있어요. 프로필은 이 브라우저에만 저장되고, 로그인은 필요
-        없어요.
-      </p>
+      <p className="profile__eyebrow">{profile ? t.edit : t.eyebrow}</p>
+      <h1 className="profile__title">{t.title}</h1>
+      <p className="profile__note">{t.note}</p>
 
       <form className="profile__form" onSubmit={onSubmit}>
         <div className="field">
-          <label htmlFor="college">단과대학</label>
+          <label htmlFor="college">{t.college}</label>
           <select
             id="college"
             value={college}
@@ -60,7 +61,7 @@ export function ProfilePage() {
               setMajor('');
             }}
           >
-            <option value="">선택해주세요</option>
+            <option value="">{t.choose}</option>
             {INHA_COLLEGES.map((c) => (
               <option key={c.college} value={c.college}>
                 {c.college}
@@ -70,9 +71,9 @@ export function ProfilePage() {
         </div>
 
         <div className="field">
-          <label htmlFor="major">전공</label>
+          <label htmlFor="major">{t.major}</label>
           <select id="major" value={major} onChange={(e) => setMajor(e.target.value)} disabled={!college}>
-            <option value="">{college ? '선택해주세요' : '단과대학을 먼저 선택해주세요'}</option>
+            <option value="">{college ? t.choose : t.chooseCollegeFirst}</option>
             {majors.map((m) => (
               <option key={m.name} value={m.name}>
                 {m.name}
@@ -82,18 +83,18 @@ export function ProfilePage() {
         </div>
 
         <fieldset className="field">
-          <legend>학년</legend>
+          <legend>{t.year}</legend>
           <div className="choice-row">
             {YEARS.map((y) => (
               <button key={y} type="button" className="pill" aria-pressed={year === y} onClick={() => chooseYear(y)}>
-                {y}학년
+                {t.yearOption(y)}
               </button>
             ))}
           </div>
         </fieldset>
 
         <div className="field">
-          <label htmlFor="entrance">입학년도</label>
+          <label htmlFor="entrance">{t.entranceYear}</label>
           <select
             id="entrance"
             value={effectiveEntrance}
@@ -104,7 +105,7 @@ export function ProfilePage() {
           >
             {Array.from({ length: 10 }, (_, i) => thisYear - i).map((y) => (
               <option key={y} value={y}>
-                {y}년 ({String(y).slice(2)}학번)
+                {t.entranceOption(y)}
               </option>
             ))}
           </select>
@@ -112,12 +113,12 @@ export function ProfilePage() {
 
         <fieldset className="field field--wide">
           <legend>
-            관심 분야 <span className="field__hint">선택한 분야의 공지를 먼저 보여드려요 · 여러 개 선택 가능</span>
+            {t.interests} <span className="field__hint">{t.interestsHint}</span>
           </legend>
           <div className="choice-row">
             {INTERESTS.map((i) => (
               <button key={i.id} type="button" className="pill" aria-pressed={interests.includes(i.id)} onClick={() => toggleInterest(i.id)}>
-                {i.label}
+                {lang === 'en' ? i.en : i.label}
               </button>
             ))}
           </div>
@@ -125,10 +126,10 @@ export function ProfilePage() {
 
         <div className="profile__actions">
           <button type="submit" className="pill pill--solid" disabled={!canSave}>
-            저장하고 맞춤 공지 보기
+            {t.save}
           </button>
           <Link to="/" className="pill">
-            취소
+            {t.cancel}
           </Link>
           {profile && (
             <button
@@ -139,11 +140,11 @@ export function ProfilePage() {
                 navigate('/');
               }}
             >
-              프로필 지우기
+              {t.clear}
             </button>
           )}
         </div>
-        {!canSave && <p className="profile__hint">단과대학과 전공을 선택하면 저장할 수 있어요.</p>}
+        {!canSave && <p className="profile__hint">{t.saveHint}</p>}
       </form>
     </section>
   );

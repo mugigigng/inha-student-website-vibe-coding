@@ -39,6 +39,14 @@
   margin: 16px 0;
   font-size: var(--text-small);
 }
+.cal__view {
+  display: inline-flex;
+  gap: 6px;
+  margin-right: 6px;
+}
+.agenda__saved {
+  color: var(--accent);
+}
 .cal__legend-note {
   font-style: italic;
   color: var(--ink-muted);
@@ -79,7 +87,7 @@
   opacity: 0.35;
 }
 .grid__cell--past:not(.grid__cell--out) {
-  background: #ebe6de;
+  background: var(--cell-out);
 }
 .grid__cell--past .ev {
   opacity: 0.55;
@@ -107,7 +115,7 @@
 }
 .grid__cell--today .grid__day {
   background: var(--accent);
-  color: #fff;
+  color: var(--on-dark);
   font-weight: 600;
 }
 .grid__events {
@@ -176,7 +184,7 @@
   width: 100%;
   padding: 14px 4px;
   border: 0;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
   background: none;
   text-align: left;
   cursor: pointer;
@@ -184,7 +192,7 @@
 }
 .agenda__item:hover {
   color: var(--accent);
-  background: rgba(255, 255, 255, 0.35);
+  background: var(--hover-wash);
 }
 .agenda__date {
   font-variant-numeric: tabular-nums;
@@ -258,7 +266,7 @@
   outline-offset: 1px;
 }
 .agenda__item--highlight {
-  background: rgba(13, 143, 0, 0.08);
+  background: var(--today-wash);
   box-shadow: inset 3px 0 0 var(--accent);
 }
 .agenda__empty {

@@ -121,7 +121,7 @@
   display: grid;
   grid-template-columns: 32px 1fr;
   padding: 12px 0;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
   font-size: var(--text-big);
   line-height: 1.6;
 }
@@ -186,7 +186,7 @@
   margin: 12px 0 0;
   padding: 20px;
   background: var(--paper-raised);
-  border: 1px solid rgba(44, 22, 0, 0.18);
+  border: 1px solid var(--rule-soft);
   font-family: var(--font-sans);
   font-size: var(--text-small);
   line-height: 1.8;
@@ -209,7 +209,7 @@
   grid-template-columns: 76px 1fr;
   gap: 8px;
   padding: 12px 0;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
 }
 .dates__row dt {
   color: var(--ink-muted);
@@ -257,10 +257,31 @@
   font-size: var(--text-tiny);
   color: var(--accent);
 }
+.detail__saved {
+  margin: 10px 0 0;
+  font-size: var(--text-small);
+  font-weight: 500;
+  color: var(--accent);
+}
+.detail__export {
+  display: block;
+  margin: 10px 0 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: var(--text-tiny);
+  font-style: italic;
+  color: var(--ink-muted);
+  text-decoration: underline;
+  cursor: pointer;
+}
+.detail__export:hover {
+  color: var(--accent);
+}
 .detail__ai-meta {
   margin: 16px 0 0;
   padding-top: 12px;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
   font-size: var(--text-tiny);
   color: var(--ink-muted);
   line-height: 1.6;

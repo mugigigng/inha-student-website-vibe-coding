@@ -7,6 +7,7 @@ import { InvalidAiJsonError, PocError } from './errors.ts';
 import { getNoticeDetail } from './api/notices.ts';
 import { ingest } from './ingest.ts';
 import { notificationCandidates } from './match.ts';
+import { buildNotification } from './notifications.ts';
 import { parseProfile, type Profile } from './profile.ts';
 import { fetchNotice, listNotices } from './sources/inhaMainNotice.ts';
 
@@ -84,6 +85,9 @@ async function runIngest(args: string[]) {
           if (!notice) return;
           for (const c of notificationCandidates(notice, profiles, today)) {
             console.log(`[MATCH] Notice ${notice.sourceNoticeId} → ${c.profileId}: ${c.result.matchLevel} (${c.result.matchReasons.join(', ')})`);
+            // bilingual message, ready for a future sender to pick by the user's language (nothing is sent)
+            const m = buildNotification(notice, c.result);
+            console.log(`[NOTIFY] ko: ${m.titleKo} · ${m.bodyKo} | en: ${m.titleEn} · ${m.bodyEn}`);
           }
         }
       : undefined,

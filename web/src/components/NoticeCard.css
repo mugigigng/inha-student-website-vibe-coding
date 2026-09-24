@@ -10,11 +10,17 @@
 }
 .card:hover,
 .card:focus-within {
-  background: #f6f2ec;
+  background: var(--card);
   border-color: var(--accent);
   transform: translateY(-3px);
 }
-.card:hover .card__match {
+.card:hover .card__title,
+.card:focus-within .card__title {
+  color: var(--accent);
+}
+/* "⭐ why it's recommended" line. Always styled the same: changing its size on hover
+   changed the card height and made the whole grid row jump. */
+.card__match {
   margin: -2px 0 -4px;
   font-size: var(--text-small);
   font-weight: 600;
@@ -24,20 +30,6 @@
   font-weight: 400;
   font-style: italic;
   color: var(--ink-muted);
-}
-
-.card__title {
-  color: var(--accent);
-}
-
-.card__top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
-}
-.card__title {
-  color: var(--accent);
 }
 
 .card__top {
@@ -107,7 +99,7 @@
   gap: 4px 18px;
   margin: 0;
   padding-top: 12px;
-  border-top: 1px solid rgba(44, 22, 0, 0.18);
+  border-top: 1px solid var(--rule-soft);
   font-size: var(--text-small);
   font-variant-numeric: tabular-nums;
 }

@@ -74,7 +74,7 @@ button {
   padding: 3px 14px;
   border: 1px solid var(--ink);
   border-radius: var(--pill);
-  background: #fff;
+  background: var(--surface);
   color: var(--ink);
   font-style: italic;
   font-size: var(--text-normal);
@@ -155,7 +155,7 @@ button {
 .pill--solid:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-dark);
 }
 .pill:disabled {
   opacity: 0.4;
@@ -196,28 +196,29 @@ button {
   border-color: var(--black);
   color: var(--paper);
 }
-.ev--deadline::before {
-  content: '마감 ';
+/* short kind prefix ("마감"/"Due", "일정"/"Event") comes from translations via data-prefix */
+.ev[data-prefix]::before {
+  content: attr(data-prefix) ' ';
   font-weight: 600;
 }
 .ev--event {
-  background: #fff;
+  background: var(--surface);
   border-color: var(--hero);
   color: var(--hero);
-}
-.ev--event::before {
-  content: '일정 ';
-  font-weight: 600;
 }
 a.ev:hover {
   background: var(--accent);
   border-color: var(--accent);
-  color: #fff;
+  color: var(--on-dark);
 }
 .ev--sample {
   display: inline-block;
 }
 .ev--sample::before {
   content: none;
+}
+/* notices the student added to their calendar ("내 일정") */
+.ev--saved {
+  box-shadow: inset 3px 0 0 var(--accent);
 }
 

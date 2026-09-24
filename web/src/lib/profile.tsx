@@ -1,4 +1,5 @@
 import { parseProfile, type Profile } from '@shared/profile.ts';
+import { translations, type Lang } from './i18n.ts';
 import { createContext, useCallback, useContext, useEffect, useState } from 'react';
 
 // Local/demo profile: no accounts yet, so it lives in this browser's localStorage.
@@ -59,5 +60,5 @@ export function useProfile(): ProfileState {
   return ctx;
 }
 
-/** "컴퓨터공학과 1학년" */
-export const profileLabel = (p: Profile) => `${p.major} ${p.year}학년`;
+/** "컴퓨터공학과 1학년" / "컴퓨터공학과, Year 1": only the label is localized; the major (user data) stays as stored. */
+export const profileLabel = (p: Profile, lang: Lang = 'ko') => translations[lang].profile.label(p.major, p.year);

@@ -7,9 +7,9 @@ export interface FilterOption {
 }
 
 /** Pill filter bar (gchf menu style); the active pill is filled black. */
-export function CategoryFilter({ options, value, onChange }: { options: FilterOption[]; value: string; onChange: (v: string) => void }) {
+export function CategoryFilter({ options, value, onChange, label }: { options: FilterOption[]; value: string; onChange: (v: string) => void; label: string }) {
   return (
-    <div className="filter" role="group" aria-label="카테고리 필터">
+    <div className="filter" role="group" aria-label={label}>
       {options.map((o) => (
         <button key={o.value} type="button" className="pill" aria-pressed={o.value === value} onClick={() => onChange(o.value)}>
           {o.label}

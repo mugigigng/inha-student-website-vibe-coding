@@ -1,14 +1,13 @@
 import { dday } from '../lib/dates.ts';
+import { useLanguage } from '../lib/language.tsx';
 import './DdayBadge.css';
 
-/** D-day for a deadline (KST). Renders nothing when there is no deadline. */
-export function DdayBadge({ deadline, lang = 'ko' }: { deadline: string | null; lang?: 'ko' | 'en' }) {
+/** D-day for a deadline (KST). "D-6" is the same in both languages; only "마감/Closed" and the tooltip change. */
+export function DdayBadge({ deadline }: { deadline: string | null }) {
+  const { lang, t } = useLanguage();
   if (!deadline) return null;
   const { label, tone, days } = dday(deadline, undefined, lang);
-  const title =
-    lang === 'en'
-      ? tone === 'closed' ? 'Applications have closed' : days === 0 ? 'Closes today' : `${days} day${days === 1 ? '' : 's'} left`
-      : tone === 'closed' ? '신청이 마감되었어요' : days === 0 ? '오늘 마감' : `마감까지 ${days}일`;
+  const title = tone === 'closed' ? t.common.ddayClosed : days === 0 ? t.common.ddayToday : t.common.ddayLeft(days);
   return (
     <span className={`dday dday--${tone}`} title={title}>
       {label}

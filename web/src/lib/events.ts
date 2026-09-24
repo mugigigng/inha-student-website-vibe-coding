@@ -14,7 +14,6 @@ export interface NoticeEvent {
   notice: NoticeListItem;
 }
 
-export const EVENT_LABEL: Record<EventKind, string> = { deadline: '신청 마감', event: '행사 일정' };
 
 export function noticeEvents(n: NoticeListItem): NoticeEvent[] {
   const a = n.analysis;

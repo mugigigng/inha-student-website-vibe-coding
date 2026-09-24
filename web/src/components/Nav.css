@@ -39,7 +39,32 @@
   position: fixed;
   inset: 0 0 auto 0;
   height: 72px;
-  background: linear-gradient(var(--paper) 45%, rgba(230, 224, 215, 0));
+  background: linear-gradient(var(--paper) 45%, var(--nav-fade));
   pointer-events: none;
   z-index: -1;
+}
+@media (max-width: 760px) {
+  /* phones: the floating menu takes the full width (the "Notices" pill is the home link),
+     so the wordmark would sit under it; the hero already names the site */
+  .nav__brand {
+    display: none;
+  }
+  .nav nav {
+    left: var(--gutter);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .nav__links {
+    gap: 5px;
+    max-width: 100%;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .nav__links::-webkit-scrollbar {
+    display: none;
+  }
+  .nav__links .pill {
+    padding-inline: 9px;
+    white-space: nowrap;
+  }
 }

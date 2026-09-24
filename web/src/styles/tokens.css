@@ -1,40 +1,55 @@
 /*
- * Design tokens — adapted from gchf.kr (계촌 HOO 페스티벌):
- * warm greige paper, dark-brown ink, green hover, black "you are here" pill,
- * IBM Plex Sans KR body + a display serif, thin 1px rules, italic pill buttons.
+ * Design tokens — Inha Insight, inspired by duten.com (brushed stainless steel):
+ * light grey page, near-black ink, cool greys, #C6C6C6 hairlines, one grotesque family,
+ * black pills, brushed-steel wordmark. Monochrome; red only for urgent deadlines.
+ * Site-wide styling on top of the components is in theme.css.
  */
 :root {
   /* color */
-  --ink: #2c1600;              /* text — never pure black text */
-  --ink-muted: #6f5d4c;
-  --paper: #e6e0d7;            /* page background */
-  --paper-raised: #efeae3;     /* cards */
-  --mint: #d7e6d8;             /* secondary band / chip */
-  --lavender: #d7dce6;         /* tertiary band / chip */
-  --sand: #dfc4a7;             /* selection / chip */
-  --accent: #0d8f00;           /* hover + "open" state */
-  --hero: #1450d2;             /* display type blue (HOO lettering) */
-  --urgent: #ff0083;           /* deadline today / tomorrow */
-  --black: #111;               /* active pill fill */
-  --rule: var(--ink);
-  --rule-soft: rgba(44, 22, 0, 0.18); /* hairlines inside lists/cards */
-  --surface: #fff;                     /* pills, inputs, toggles */
-  --on-dark: #fff;                     /* text on accent/urgent fills */
-  --hover-wash: rgba(255, 255, 255, 0.35);
-  --card: #f6f2ec;
-  --band-soft: #f7faf6;                /* cards on the mint band */
-  --cell-out: #ebe6de;                 /* calendar days outside the month */
-  --today-wash: rgba(13, 143, 0, 0.08);
-  --nav-fade: rgba(230, 224, 215, 0);
+  --ink: #161615;
+  --ink-muted: #707070;
+  --paper: #ededed;            /* page background */
+  --paper-raised: #f4f4f4;     /* cards */
+  --card: #f4f4f4;
+  --mint: #e4e4e4;             /* secondary band / chip */
+  --lavender: #e0e0e0;         /* tertiary band / chip */
+  --sand: #161615;             /* selection: black */
+  --accent: #000;              /* hover + "open" state */
+  --hero: #80878e;
+  --urgent: #ff5252;           /* deadline today / tomorrow */
+  --black: #161615;            /* active pill fill */
+  --rule: #c6c6c6;             /* hairlines */
+  --rule-soft: #d6d6d6;        /* hairlines inside lists/cards */
+  --surface: transparent;      /* pills, inputs, toggles */
+  --on-dark: #fff;             /* text on dark/urgent fills */
+  --hover-wash: rgba(0, 0, 0, 0.03);
+  --band-soft: #f4f4f4;
+  --cell-out: #e6e6e6;         /* calendar days outside the month */
+  --today-wash: rgba(0, 0, 0, 0.04);
+  --nav-fade: rgba(237, 237, 237, 0);
+  --grey-code: #919191;        /* product-code greys: chips, labels */
+  --grey-text: #80878e;        /* secondary text */
   /* category chip tints */
-  --tint-event: #f3d6e4;
-  --tint-career: #e6e2c4;
-  --tint-intl: #cfdcf3;
-  --tint-life: #ece8e1;
+  --tint-event: #dedede;
+  --tint-career: #e2e2e2;
+  --tint-intl: #d9dbdd;
+  --tint-life: #e6e6e6;
+
+  /* surfaces */
+  /* mid-graphite brushed steel: softer than black, still ≥3:1 on #EDEDED for large display text */
+  --steel:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.08) 0 1px, transparent 1px 3px),
+    linear-gradient(100deg, #55595e 0%, #7a7e83 28%, #5c6065 46%, #868a8f 64%, #62666b 82%, #55595e 100%);
+  /* lighter steel for the second word (like the grey "Insight" in the nav logo) */
+  --steel-light:
+    repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.1) 0 1px, transparent 1px 3px),
+    linear-gradient(100deg, #7d8186 0%, #9ea2a6 30%, #83878c 50%, #a5a9ad 70%, #868a8f 100%);
+  /* hairline frame crossed by a diagonal (duten product tile) */
+  --diagonal: linear-gradient(to top right, transparent calc(50% - 0.5px), var(--rule) 50%, transparent calc(50% + 0.5px));
 
   /* type */
-  --font-sans: 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
-  --font-display: 'Fraunces', 'Times New Roman', serif;
+  --font-sans: 'Inter Tight', 'IBM Plex Sans KR', -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', sans-serif;
+  --font-display: var(--font-sans);
   --text-display: 24px;
   --text-big: 18px;
   --text-normal: 16px;

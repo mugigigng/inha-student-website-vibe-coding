@@ -54,4 +54,4 @@ More detail: [`CLAUDE.md`](CLAUDE.md) (architecture), [`docs/ingestion-result.md
 
 ## Stack
 
-TypeScript · Node (`node:sqlite`, `node:http`) · cheerio · Gemini (`@google/genai`) with Zod-validated structured output · React 19 + Vite + react-router · Lenis. The design is adapted from [gchf.kr](https://gchf.kr).
+TypeScript · Node (`node:sqlite`, `node:http`) · cheerio · Gemini (`@google/genai`) with Zod-validated structured output · React 19 + Vite + react-router · Lenis. The design is inspired by [duten.com](https://www.duten.com/en/finish/brushed-stainless-steel/).

@@ -13,7 +13,7 @@ export function Nav() {
   const { t } = useLanguage();
   return (
     <header className="nav">
-      <Link to="/" className="nav__brand" aria-label={t.nav.brandLabel}>
+      <Link to="/" className="nav__brand notranslate" translate="no" aria-label={t.nav.brandLabel}>
         <span className="nav__brand-mark">{t.nav.brandMain}</span> <em>{t.nav.brandAccent}</em>
       </Link>
       <nav aria-label={t.nav.menu}>

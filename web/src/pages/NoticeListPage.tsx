@@ -85,23 +85,16 @@ export function NoticeListPage() {
           {/* app-wide language switch (lib/language.tsx): changes every page, not just this one */}
           <LanguageToggle />
         </div>
-        <h1 className="hero__title">
+        {/* translate="no": browser page translation turns "인하" (Inha, a name) into "price reduction";
+            the app's own 한국어/English toggle provides the English wording */}
+        <h1 className="hero__title notranslate" translate="no">
           <span>{t.home.titleMain}</span>
           <em>{t.home.titleAccent}</em>
         </h1>
-        <p className="hero__tagline">{t.home.tagline}</p>
+        <p className="hero__tagline notranslate" translate="no">
+          {t.home.tagline}
+        </p>
         <div className="hero__foot">
-          {/* profile editing lives on /profile (nav); only first-time visitors get the setup prompt here */}
-          <div className="hero__greeting">
-            {!profile && (
-              <p className="hero__lede">
-                {t.home.setupPrompt}{' '}
-                <Link to="/profile" className="pill pill--solid hero__cta">
-                  {t.home.setupCta}
-                </Link>
-              </p>
-            )}
-          </div>
           {state.status === 'ok' && (
             <dl className="hero__stats">
               <div>
@@ -119,6 +112,15 @@ export function NoticeListPage() {
             </dl>
           )}
         </div>
+        {/* profile editing lives on /profile (nav); first-time visitors get the setup prompt right above "last checked" */}
+        {!profile && (
+          <div className="hero__setup">
+            <p className="hero__setup-text">{t.home.setupPrompt}</p>
+            <Link to="/profile" className="pill pill--solid">
+              {t.home.setupCta}
+            </Link>
+          </div>
+        )}
         {lastChecked && (
           <p className="hero__checked">
             {t.home.lastChecked} ·{' '}

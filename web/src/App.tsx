@@ -45,7 +45,9 @@ export function App() {
       </main>
       <footer className="site-foot">
         <span>{t.footer.disclaimer}</span>
-        <span>© 2026 {t.siteName}</span>
+        <span className="notranslate" translate="no">
+          © 2026 {t.siteName}
+        </span>
       </footer>
     </>
   );

@@ -1,0 +1,339 @@
+/*
+ * Inha Insight design — inspired by duten.com (finish: brushed stainless steel).
+ * Site-wide look on top of the component styles; tokens (colours, fonts, steel) are in tokens.css.
+ * Selectors are prefixed with :root so they keep the specificity they need to override components.
+ *
+ * Traits: light grey page, near-black ink, cool greys, #C6C6C6 hairlines, Inter Tight (for duten's
+ * Maison Neue) at 500/600, a huge centred brushed-steel wordmark with a thin rule under it, product
+ * tiles as hairline frames crossed by a diagonal, grey tracked product codes, black outline / black
+ * filled pills, black selection. Monochrome: red only for urgent deadlines.
+ */
+/* ---------- type ---------- */
+:root body {
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+:root *::selection {
+  background: #161615;
+  color: #fff;
+}
+:root body * {
+  font-style: normal; /* beats the component italics */
+}
+
+/* hero: the centred steel wordmark */
+:root .hero {
+  align-items: center;
+  text-align: center;
+  border-bottom: 0;
+  padding-top: 96px;
+}
+/* eyebrow left, language switch right (not centred), like the other themes */
+:root .hero__top {
+  width: 100%;
+  margin-bottom: 28px;
+}
+:root .hero__title {
+  align-items: center;
+  font-weight: 600;
+  font-size: clamp(76px, 15vw, 240px);
+  line-height: 0.82;
+  letter-spacing: -0.045em;
+  background: var(--steel);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 1px 0 rgba(255, 255, 255, 0.8));
+}
+:root .hero__title em {
+  padding-left: 0;
+  font-weight: 600;
+  background: var(--steel-light);
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+:root .hero__title::after {
+  content: '';
+  display: block;
+  width: min(560px, 60vw);
+  height: 1px;
+  margin: 28px auto 0;
+  background: var(--grey-text);
+}
+/* tagline right under the steel wordmark's rule, centred like the duten description */
+:root .hero__tagline {
+  margin-top: 20px;
+  color: var(--grey-text);
+  text-align: center;
+}
+/* one centred column: title → rule → tagline → stats → setup tile → last checked */
+:root .hero__foot {
+  width: 100%;
+  justify-content: center;
+}
+:root .hero__stats {
+  gap: 56px;
+}
+:root .hero__stats div {
+  text-align: center;
+}
+/* setup prompt as a duten hairline tile, same width as the rule under the wordmark */
+:root .hero__setup {
+  width: min(560px, 100%);
+  margin: 32px auto 0;
+  background: var(--paper); /* solid, so the particle lines don't run through the text */
+}
+:root .hero__setup-text {
+  color: var(--grey-text);
+}
+:root .hero__eyebrow,
+:root .cal__eyebrow,
+:root .profile__eyebrow,
+:root .notif__eyebrow {
+  font-size: var(--text-small);
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: var(--grey-code);
+}
+:root .hero__stats dd {
+  font-weight: 600;
+  letter-spacing: -0.04em;
+}
+:root .hero__stats dt,
+:root .card__ai,
+:root .dates__row dt,
+:root .grid__wd {
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  font-size: var(--text-tiny);
+  color: var(--grey-code);
+}
+:root .hero__lede,
+:root .hero__checked,
+:root .section-head__note,
+:root .profile__note,
+:root .notif__note {
+  color: var(--grey-text);
+}
+
+/* headings: one family, tight, semibold */
+:root .section-head__title,
+:root .list__title,
+:root .agenda__title,
+:root .profile__title,
+:root .notif__title,
+:root .detail__title,
+:root .card__title {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+:root .section-head__title,
+:root .list__title {
+  font-size: calc(var(--text-display) + 8px);
+}
+:root .list__title em {
+  color: var(--grey-code);
+  font-weight: 500;
+}
+:root .cal__title {
+  font-weight: 600;
+  letter-spacing: -0.045em;
+  color: #161615;
+}
+:root .cal__title em {
+  color: var(--grey-code);
+}
+:root .detail__h2 {
+  font-weight: 600;
+  font-size: var(--text-small);
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+  color: var(--grey-code);
+}
+
+/* ---------- buttons: duten's outline / black pills ---------- */
+:root .pill {
+  padding: 5px 16px;
+  border: 1px solid #161615;
+  background: transparent;
+  color: #161615;
+  font-weight: 500;
+  font-size: var(--text-small);
+  transition: background-color 0.2s, color 0.2s;
+}
+:root .pill:hover {
+  color: #fff;
+  background: #161615;
+  border-color: #161615;
+}
+:root .pill[aria-current='page'],
+:root .pill[aria-pressed='true'],
+:root .pill--solid {
+  background: #161615;
+  border-color: #161615;
+  color: #fff;
+  font-weight: 500;
+}
+:root .pill--solid:hover {
+  background: #000;
+}
+:root .lang {
+  border-color: #161615;
+  background: transparent;
+}
+:root .lang__btn[aria-pressed='true'] {
+  background: #161615;
+  color: #fff;
+}
+
+/* ---------- nav: bare, like duten's header ---------- */
+:root .nav__brand {
+  font-weight: 600;
+  font-size: 20px;
+  letter-spacing: -0.03em;
+}
+:root .nav__brand em {
+  color: var(--grey-code);
+}
+:root .nav nav .pill {
+  border-color: transparent;
+}
+:root .nav nav .pill:hover,
+:root .nav nav .pill[aria-current='page'] {
+  border-color: #161615;
+}
+
+/* ---------- product-tile cards: hairline frame + diagonal ---------- */
+:root .card {
+  border: 1px solid var(--rule);
+  background: var(--diagonal), transparent;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+:root .card:hover,
+:root .card:focus-within {
+  transform: none;
+  border-color: #161615;
+  background: var(--diagonal), rgba(255, 255, 255, 0.55);
+}
+:root .card__title {
+  color: #161615;
+}
+:root .card:hover .card__title {
+  color: #000;
+}
+:root .card__summary {
+  color: var(--grey-text);
+}
+:root .card__match {
+  color: #161615;
+  font-weight: 600;
+}
+:root .detail__aside,
+:root .state {
+  border: 1px solid var(--rule);
+  background: transparent;
+}
+:root .foryou {
+  border-top: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: #e6e6e6;
+}
+:root .detail__easy {
+  border: 1px solid var(--rule);
+  background: #f4f4f4;
+}
+
+/* category chips read like product codes: grey, tracked, no fill */
+:root .chip {
+  padding: 0;
+  border: 0;
+  background: transparent !important; /* overrides the inline category tint */
+  color: var(--grey-code);
+  font-weight: 600;
+  letter-spacing: 0.055em;
+  text-transform: uppercase;
+}
+:root .chip--pending {
+  color: var(--ink-muted);
+}
+:root .dday {
+  border-radius: 0;
+  font-weight: 600;
+}
+:root .dday--open {
+  color: #161615;
+  border-color: #161615;
+}
+
+/* summary numbers: grey product-code numerals */
+:root .detail__summary li::before {
+  font-weight: 600;
+  color: var(--grey-code);
+  letter-spacing: 0.055em;
+}
+
+/* ---------- calendar ---------- */
+:root .grid {
+  border-color: var(--rule);
+}
+:root .grid__wd,
+:root .grid__cell {
+  border-color: var(--rule);
+}
+:root .grid__cell {
+  background: transparent;
+}
+:root .grid__wd--sun {
+  color: var(--urgent);
+}
+:root .ev {
+  border-radius: 0;
+}
+:root .ev--event {
+  background: transparent;
+  border-color: #161615;
+  color: #161615;
+}
+:root .grid__cell--today .grid__day {
+  background: #161615;
+  color: #fff;
+}
+
+/* ---------- forms ---------- */
+:root .field select {
+  border: 1px solid var(--rule);
+  background-color: transparent;
+}
+:root .field select:focus {
+  border-color: #161615;
+}
+
+/* ---------- misc ---------- */
+:root .scroll-progress {
+  height: 1px;
+  background: #161615;
+}
+:root .notif__item--relevant {
+  background: rgba(255, 255, 255, 0.5);
+}
+:root .site-foot {
+  border-top-color: var(--rule);
+}
+
+@media (max-width: 760px) {
+  :root .nav nav {
+    justify-content: center;
+  }
+  :root .hero__foot {
+    align-items: center;
+  }
+  :root .hero__stats {
+    gap: 28px;
+  }
+  :root .hero {
+    min-height: 0;
+    padding-top: 84px;
+  }
+}

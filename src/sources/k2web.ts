@@ -30,15 +30,20 @@ export interface ListedNotice {
   title: string;
   /** 작성일 shown in the list, YYYY-MM-DD. */
   listedDate: string | null;
-  /** Pinned "일반공지" rows repeat on every page and can be old. */
+  /**
+   * Pinned "일반공지" rows repeat on every page and can be old. A recent pinned post is often also
+   * listed in the normal flow; listNotices() then reports it as regular (see uniqueListed).
+   */
   pinned: boolean;
 }
 
 export interface BoardSource {
   config: BoardConfig;
+  /** HTTP requests this board has made so far (list pages, articles); read by the ingest CLI. */
+  readonly requests: { list: number; article: number };
   parseNoticeUrl(url: string): { sourceNoticeId: string; canonicalUrl: string };
   fetchNotice(url: string): Promise<RawNotice>;
-  /** Reads list pages 1..pages and returns unique notices in page order. */
+  /** Reads list pages 1..pages and returns unique notices in page order (see uniqueListed). */
   listNotices(opts?: { pages?: number }): Promise<ListedNotice[]>;
   parseListHtml(html: string): ListedNotice[];
   parseNoticeHtml(html: string, ids: { sourceNoticeId: string; canonicalUrl: string }): RawNotice;
@@ -52,6 +57,7 @@ export function makeBoardSource(config: BoardConfig): BoardSource {
   const urlPattern = new RegExp(`^${escapeRe(origin)}${escapeRe(base)}/(\\d+)/artclView\\.do$`);
   const hrefPattern = new RegExp(`${escapeRe(base)}/(\\d+)/artclView\\.do`);
   const articleUrl = (id: string) => `${origin}${base}/${id}/artclView.do`;
+  const requests = { list: 0, article: 0 };
 
   function parseNoticeUrl(url: string) {
     const clean = url.trim().replace(/^http:/, 'https:').split(/[?#]/)[0];
@@ -83,14 +89,15 @@ export function makeBoardSource(config: BoardConfig): BoardSource {
   }
 
   async function listNotices({ pages = 1 }: { pages?: number } = {}): Promise<ListedNotice[]> {
-    const seen = new Map<string, ListedNotice>();
+    const all: ListedNotice[] = [];
     for (let page = 1; page <= pages; page++) {
+      requests.list++;
       const html = await fetchHtml(`${origin}${base}/artclList.do?page=${page}`);
       const rows = parseListHtml(html);
       if (rows.length === 0) throw new InvalidResponseError(`List page ${page} has no notice rows (layout changed or site error page)`);
-      for (const row of rows) if (!seen.has(row.sourceNoticeId)) seen.set(row.sourceNoticeId, row);
+      all.push(...rows);
     }
-    return [...seen.values()];
+    return uniqueListed(all);
   }
 
   function parseNoticeHtml(html: string, { sourceNoticeId, canonicalUrl }: { sourceNoticeId: string; canonicalUrl: string }): RawNotice {
@@ -146,10 +153,25 @@ export function makeBoardSource(config: BoardConfig): BoardSource {
 
   async function fetchNotice(url: string): Promise<RawNotice> {
     const ids = parseNoticeUrl(url);
+    requests.article++;
     return parseNoticeHtml(await fetchHtml(ids.canonicalUrl), ids);
   }
 
-  return { config, parseNoticeUrl, fetchNotice, listNotices, parseListHtml, parseNoticeHtml };
+  return { config, requests, parseNoticeUrl, fetchNotice, listNotices, parseListHtml, parseNoticeHtml };
+}
+
+/**
+ * Unique notices in list order. A post that is both pinned and in the normal flow (K2Web repeats
+ * recent pinned posts there) counts as a regular row, so it is subject to the ingest --limit.
+ */
+export function uniqueListed(rows: ListedNotice[]): ListedNotice[] {
+  const seen = new Map<string, ListedNotice>();
+  for (const row of rows) {
+    const prev = seen.get(row.sourceNoticeId);
+    if (!prev) seen.set(row.sourceNoticeId, { ...row });
+    else if (prev.pinned && !row.pinned) prev.pinned = false;
+  }
+  return [...seen.values()];
 }
 
 export async function fetchHtml(url: string): Promise<string> {

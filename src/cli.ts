@@ -5,7 +5,7 @@ import { analyzeNotice, PROMPT_VERSION } from './analyze.ts';
 import { contentHash, counts, currentGroupAnalysis, DB_PATH, getNotice, insertAnalysis, listNoticesWithLatestAnalysis, openDb, upsertNotice } from './db.ts';
 import { InvalidAiJsonError, PocError } from './errors.ts';
 import { getNoticeDetail } from './api/notices.ts';
-import { ingestAll, type IngestStats } from './ingest.ts';
+import { ingestAll, todayKst, type IngestStats } from './ingest.ts';
 import { notificationCandidates } from './match.ts';
 import { buildNotification } from './notifications.ts';
 import { parseProfile, type Profile } from './profile.ts';
@@ -15,9 +15,11 @@ const USAGE = `Usage:
   npm run crawl -- <notice-url>              fetch + parse only (no DB, no AI)
   npm run poc   -- <notice-url> [--reanalyze] fetch -> DB -> AI -> DB -> print
   npm run show  [-- <notice-id>]             print stored notices + latest analysis
-  npm run ingest [-- --source main|aicc|cse|ai[,...]] [--pages N] [--limit N] [--no-ai] [--upgrade-prompt]
-                                             crawl board lists (all sources by default) -> new/updated/duplicate
-                                             detection -> DB -> AI only where needed`;
+  npm run ingest [-- --source main|aicc|cse|ai[,...]] [--pages N] [--limit N] [--full] [--no-ai] [--upgrade-prompt]
+                                             crawl board lists (all sources by default) -> fetch only new posts
+                                             (+ known ones posted in the last 7 days or with a date not passed yet;
+                                             --full re-fetches all) -> new/updated/duplicate detection -> DB -> AI
+                                             only where needed. --limit counts regular posts; pinned ones are extra`;
 
 async function main(argv: string[]) {
   const [command, ...rest] = argv;
@@ -73,7 +75,7 @@ async function runIngest(args: string[]) {
   // (data/profiles.json, optional). Only logs for now — no notifications are sent.
   const profiles = loadProfiles();
   if (profiles.length) console.log(`[MATCH] ${profiles.length} profile(s) loaded; new analyses will be matched`);
-  const today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Seoul' }).format(new Date());
+  const today = todayKst();
 
   // One board after another; a failing board never stops the others (see ingestAll).
   const sourceRuns = sources.map((s) => ({
@@ -81,11 +83,15 @@ async function runIngest(args: string[]) {
     listNotices: () => s.board.listNotices({ pages }),
     fetchNotice: s.board.fetchNotice,
     limit: flag('--limit') ?? s.defaultLimit,
+    httpRequests: () => s.board.requests,
   }));
   const runs = await ingestAll(sourceRuns, {
     db,
     analyze: provider ? (n) => analyzeNotice(n, provider) : null,
     upgradePrompt: args.includes('--upgrade-prompt'),
+    full: args.includes('--full'),
+    today,
+    aiName: provider?.name,
     aiDelayMs: Number(process.env.INGEST_AI_DELAY_MS ?? 4000),
     onAnalyzed: profiles.length
       ? (noticeId) => {
@@ -108,8 +114,9 @@ async function runIngest(args: string[]) {
       failed = true;
       continue;
     }
-    const { errors, ...summary }: IngestStats = run.stats;
-    console.log(`[DONE] ${run.source}: ${JSON.stringify(summary)}`);
+    const { errors, http, ...summary }: IngestStats = run.stats;
+    const httpLine = http ? ` http=${http.list + http.article} (list ${http.list}, article ${http.article})` : '';
+    console.log(`[DONE] ${run.source}:${httpLine} ${JSON.stringify(summary)}`);
     for (const e of errors) console.log(`  - ${e.noticeId} (${e.stage}): ${e.message}`);
     if (run.stats.crawlFailed || run.stats.analysisFailed) failed = true;
   }

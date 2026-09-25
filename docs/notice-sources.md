@@ -9,7 +9,7 @@ Sources the crawler is allowed to read. One module per source in `src/sources/`.
 | `cse` | `inha-cse-notice` | 학과 (department) | 컴퓨터공학과 공지사항 | latest 10 |
 | `ai` | `inha-doai-notice` | 학과 (department) | 인공지능공학과 공지사항 | latest 10 |
 
-`npm run ingest` runs all three in this order. `--source cse,aicc` picks boards, and `--limit N` overrides the per-run default. A board that fails (even its list page) never stops the others.
+`npm run ingest` runs all boards in this order. `--source cse,aicc` picks boards, and `--limit N` overrides the per-run default. The limit counts regular posts only; pinned posts come on top of it (see [Incremental crawling](#incremental-crawling)). A board that fails (even its list page) never stops the others.
 
 ## `inha-main-notice` — 인하대학교 대표 홈페이지 공지사항
 
@@ -98,6 +98,8 @@ Same as the main board, with three differences:
 
 Poster-only posts (the body is an image and has no text, e.g. aicc 191375, cse 191227 and 190971, doai 191467) fail with `EmptyContentError` and are not stored, just like on the main board.
 
+A recent pinned post is often listed twice: once as a pinned `tr.headline` row and once in the normal flow. `uniqueListed()` in `k2web.ts` keeps one row and treats it as regular.
+
 Offline parser tests use real pages saved on 2026-09-25 in `test/fixtures/sources/` (`test/sources.test.ts`).
 
 ## Cross-source duplicates
@@ -114,10 +116,27 @@ The same notice is often posted on the main, college and department boards, e.g.
 - **One analysis per notice:** ingest skips Gemini for a copy when any copy in its group already has a current analysis (`[DUP]` log).
 - **API:** a group is returned once, as its canonical copy, with every board in `sources`. Opening a duplicate's id returns the canonical detail.
 
+## Incremental crawling
+
+`npm run ingest` requests an article page only when needed (`fetchReason()` in `src/ingest.ts`):
+
+| Listed post | Article requested? |
+|---|---|
+| Not in the DB | yes (`new`) |
+| In the DB, 작성일 within the last 7 days (`RECENT_DAYS`) | yes, re-checked for edits (`[RECHECK]`) |
+| In the DB, extracted `deadline`, `application_end` or `event_date` today or later (newest analysis of any copy in its dedup group) | yes, re-checked for edits (`[RECHECK]`) |
+| Anything else | **no**: logged `[KNOWN]`; the stored copy is reused |
+| any post, with `--full` | yes (the old behavior: re-check everything) |
+
+- A known post that is not re-fetched but still has no current analysis (an earlier deferral or failure, or `--upgrade-prompt`) is analyzed from the stored copy, with no HTTP request. AI calls follow the same rules as before.
+- Edits to an old post whose dates have all passed are not noticed without `--full`.
+- **Pinned posts:** `--limit` counts regular rows only (`selectListed()`). Every pinned row on the list page is processed on top of it: fetched if new, otherwise only under the rules above.
+- `[DONE]` prints each board's HTTP requests, e.g. `http=3 (list 1, article 2)`. The counts come from `BoardSource.requests`.
+
 ## Crawling etiquette
 
 - The crawler identifies itself with the `User-Agent` `inha-notice-poc/0.1`. Requests are sequential, with a 300 ms pause between article requests, and boards are crawled one after another.
-- Per run: one list page per board, and at most 10 articles from the college and department boards.
+- Per run: one list page per board. Articles are requested only for new or still-relevant posts (see above): at most 10 regular posts per college/department board, plus pinned ones.
 - Posters (images) and `.hwp` attachments are recorded in the database but not downloaded or parsed.
 
 ## Not used (and why)

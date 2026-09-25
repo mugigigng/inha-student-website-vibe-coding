@@ -232,6 +232,47 @@ export function hasCurrentAnalysis(db: DatabaseSync, noticeId: number, promptVer
   );
 }
 
+/**
+ * What incremental ingest needs to decide whether a known post is worth re-fetching: its
+ * 작성일 and the deadline/application-end/event dates of the newest analysis of any copy in its
+ * group (stale or current). Looked up by the canonical article URL, which list rows carry.
+ * null = not stored yet.
+ */
+export function storedNoticeState(db: DatabaseSync, sourceUrl: string): { id: number; publishedAt: string | null; dates: string[] } | null {
+  const row = db.prepare('SELECT id, published_at FROM notices WHERE source_url = ?').get(sourceUrl) as
+    | { id: number; published_at: string | null }
+    | undefined;
+  if (!row) return null;
+  const ids = groupMembers(db, row.id).map((m) => m.id);
+  const a = db
+    .prepare(
+      `SELECT deadline, application_end, event_date FROM notice_analysis
+        WHERE notice_id IN (${ids.map(() => '?').join(',')}) ORDER BY id DESC LIMIT 1`,
+    )
+    .get(...ids) as { deadline: string | null; application_end: string | null; event_date: string | null } | undefined;
+  const dates = a ? [a.deadline, a.application_end, a.event_date].filter((d): d is string => Boolean(d)) : [];
+  return { id: row.id, publishedAt: row.published_at, dates };
+}
+
+/** A stored notice as a RawNotice (for analyzing a known post without re-fetching it). */
+export function storedRawNotice(db: DatabaseSync, noticeId: number): RawNotice | null {
+  const r = getNotice(db, noticeId);
+  if (!r) return null;
+  return {
+    source: String(r.source),
+    sourceNoticeId: String(r.source_notice_id),
+    sourceUrl: String(r.source_url),
+    title: String(r.title),
+    originalContent: String(r.original_content),
+    rawHtml: String(r.raw_html),
+    publishedAt: (r.published_at as string | null) ?? null,
+    boardCategory: (r.board_category as string | null) ?? null,
+    author: (r.author as string | null) ?? null,
+    attachments: JSON.parse(String(r.attachments_json)),
+    crawledAt: String(r.crawled_at),
+  };
+}
+
 /** Per stored notice; a cross-posted copy counts as analyzed when any copy in its group is (see ingest). */
 export function counts(db: DatabaseSync) {
   const groupAnalyzed = `EXISTS (

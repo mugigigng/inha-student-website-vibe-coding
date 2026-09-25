@@ -24,6 +24,10 @@ const okAnalysis = (): AnalysisResult => ({
 
 type Post = { title: string; date: string; body: string };
 
+// Fixed "today" for the incremental re-check rules: posts from 09-18..09-22 are recent, and the
+// 09-15 post has a deadline (09-30) not passed yet, so every known post is re-fetched on re-runs.
+const TODAY = '2026-09-25';
+
 /** A fake board built on the real parser of `board`, serving `posts` by article id. */
 function fakeBoard(board: BoardSource, posts: Record<string, Post>, opts: { listFails?: boolean } = {}): IngestSource {
   const { origin, site, board: no } = board.config;
@@ -63,14 +67,14 @@ test('a notice cross-posted on the main and department boards is analyzed once a
   const db = openDb(':memory:');
   let aiCalls = 0;
   const lines: string[] = [];
-  const runs = await ingestAll(boards(), { db, analyze: async () => (aiCalls++, okAnalysis()), log: (l) => lines.push(l), crawlDelayMs: 0 });
+  const runs = await ingestAll(boards(), { db, analyze: async () => (aiCalls++, okAnalysis()), log: (l) => lines.push(l), crawlDelayMs: 0, today: TODAY });
 
   assert.deepEqual(runs.map((r) => [r.source, r.stats?.new, r.stats?.analyzed, r.stats?.duplicates]), [
     ['inha-main-notice', 1, 1, 0],
     ['inha-aicc-notice', 1, 1, 0],
     ['inha-cse-notice', 2, 1, 1],
   ]);
-  assert.equal(aiCalls, 3, '4 stored posts, 3 distinct notices, 3 Gemini requests');
+  assert.equal(aiCalls, 3, '4 stored posts, 3 distinct notices, 3 AI requests');
   assert.ok(lines.some((l) => /^\[DUP\] Notice 191991 is the same notice as #1 \(inha-main-notice 45574\)/.test(l)));
 
   const list = listNotices(db);
@@ -89,8 +93,8 @@ test('a notice cross-posted on the main and department boards is analyzed once a
   assert.equal(detail.id, drop.id);
   assert.equal(detail.sources.length, 2);
 
-  // second run: nothing new, zero Gemini requests
-  const again = await ingestAll(boards(), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0 });
+  // second run: nothing new, zero AI requests
+  const again = await ingestAll(boards(), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0, today: TODAY });
   assert.equal(aiCalls, 3);
   assert.deepEqual(again.map((r) => r.stats?.unchanged), [1, 1, 2]);
 });
@@ -98,20 +102,20 @@ test('a notice cross-posted on the main and department boards is analyzed once a
 test('if the canonical copy has no analysis yet, the duplicate is analyzed instead, and the list uses it', async () => {
   const db = openDb(':memory:');
   let aiCalls = 0;
-  await ingestAll(boards().slice(0, 1), { db, analyze: null, log: () => {}, crawlDelayMs: 0 }); // main stored, AI off
-  await ingestAll(boards().slice(2), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0 });
+  await ingestAll(boards().slice(0, 1), { db, analyze: null, log: () => {}, crawlDelayMs: 0, today: TODAY }); // main stored, AI off
+  await ingestAll(boards().slice(2), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0, today: TODAY });
   assert.equal(aiCalls, 2, 'the CSE copy is analyzed (group had none); the other CSE notice too');
   const drop = listNotices(db).find((n) => n.sources.length > 1)!;
   assert.equal(drop.analysisStatus, 'ready');
   // and the main copy is not analyzed again later
-  await ingestAll(boards().slice(0, 1), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0 });
+  await ingestAll(boards().slice(0, 1), { db, analyze: async () => (aiCalls++, okAnalysis()), log: () => {}, crawlDelayMs: 0, today: TODAY });
   assert.equal(aiCalls, 2);
 });
 
 test('one board failing to list does not stop the other boards', async () => {
   const db = openDb(':memory:');
   const lines: string[] = [];
-  const runs = await ingestAll(boards({ aiccDown: true }), { db, analyze: async () => okAnalysis(), log: (l) => lines.push(l), crawlDelayMs: 0 });
+  const runs = await ingestAll(boards({ aiccDown: true }), { db, analyze: async () => okAnalysis(), log: (l) => lines.push(l), crawlDelayMs: 0, today: TODAY });
   assert.deepEqual(runs.map((r) => [r.source, r.listFailed !== null]), [
     ['inha-main-notice', false],
     ['inha-aicc-notice', true],
@@ -125,7 +129,7 @@ test('an AI stop (quota) carries over to later boards: they defer instead of cal
   const db = openDb(':memory:');
   let aiCalls = 0;
   const runs = await ingestAll(boards(), {
-    db, log: () => {}, crawlDelayMs: 0,
+    db, log: () => {}, crawlDelayMs: 0, today: TODAY,
     analyze: async () => {
       aiCalls++;
       throw new AiApiError('quota', { status: 429 });

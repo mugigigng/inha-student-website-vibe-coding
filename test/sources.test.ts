@@ -6,6 +6,7 @@ import { test } from 'node:test';
 import { EmptyContentError, InvalidResponseError } from '../src/errors.ts';
 import * as aicc from '../src/sources/inhaAiccNotice.ts';
 import * as cse from '../src/sources/inhaCseNotice.ts';
+import * as doai from '../src/sources/inhaDoaiNotice.ts';
 import * as main from '../src/sources/inhaMainNotice.ts';
 import { selectSources, sourceForUrl } from '../src/sources/index.ts';
 
@@ -34,6 +35,35 @@ test('AI융합대학 list page: ids, titles, dates, pinned rows', () => {
   assert.equal(r.title, '2026-2학기 전담지도교수 상담 안내');
   assert.equal(r.listedDate, '2026-09-15');
   assert.equal(r.url, 'https://aicc.inha.ac.kr/bbs/act/716/191359/artclView.do');
+});
+
+test('인공지능공학과 list page: ids, <strong> titles, dates, pinned rows', () => {
+  const rows = doai.parseListHtml(fixture('doai-list.html'));
+  assert.equal(rows.length, 14);
+  assert.equal(rows.filter((r) => r.pinned).length, 4);
+  assert.deepEqual(rows.find((x) => x.sourceNoticeId === '190683'), {
+    sourceNoticeId: '190683',
+    url: 'https://doai.inha.ac.kr/bbs/doai/731/190683/artclView.do',
+    title: '[학사] 2026-2 추가 복학신청 일정 안내',
+    listedDate: '2026-09-07',
+    pinned: false,
+  });
+  assert.equal(cse.parseListHtml(fixture('doai-list.html')).length, 0, 'CSE parser ignores the AI board');
+});
+
+test('인공지능공학과 article: title, date, author, text body, attachment on the doai host; poster-only → EmptyContentError', () => {
+  const n = doai.parseNoticeHtml(fixture('doai-article-190683.html'), doai.parseNoticeUrl('https://doai.inha.ac.kr/bbs/doai/731/190683/artclView.do'));
+  assert.equal(n.source, 'inha-doai-notice');
+  assert.equal(n.title, '[학사] 2026-2 추가 복학신청 일정 안내');
+  assert.equal(n.publishedAt, '2026-09-07');
+  assert.equal(n.author, '김경남');
+  assert.equal(n.boardCategory, null);
+  assert.match(n.originalContent, /1\. 신청 대상자 : 휴학 기간이 만료되었거나/);
+  assert.deepEqual(n.attachments, [
+    { kind: 'file', name: '2. 휴복학 프로세스(학생신청) (2).pdf', url: 'https://doai.inha.ac.kr/bbs/doai/731/185140/download.do' },
+  ]);
+  const poster = 'https://doai.inha.ac.kr/bbs/doai/731/191467/artclView.do';
+  assert.throws(() => doai.parseNoticeHtml(fixture('doai-article-191467-poster.html'), doai.parseNoticeUrl(poster)), EmptyContentError);
 });
 
 test('a board only parses its own rows (other boards\' list pages give nothing)', () => {
@@ -80,6 +110,9 @@ test('each module accepts only its own board\'s article URLs; the registry route
   assert.equal(sourceForUrl(cseUrl).id, 'inha-cse-notice');
   assert.equal(sourceForUrl(aiccUrl).id, 'inha-aicc-notice');
   assert.deepEqual(selectSources('cse,main').map((s) => s.alias), ['main', 'cse'], 'always in ingest order');
-  assert.deepEqual(selectSources(undefined).map((s) => s.alias), ['main', 'aicc', 'cse']);
+  assert.deepEqual(selectSources(undefined).map((s) => s.alias), ['main', 'aicc', 'cse', 'ai']);
+  assert.deepEqual(selectSources('ai').map((s) => s.id), ['inha-doai-notice']);
+  assert.equal(sourceForUrl('https://doai.inha.ac.kr/bbs/doai/731/190683/artclView.do').id, 'inha-doai-notice');
+  assert.throws(() => doai.parseNoticeUrl('https://doai.inha.ac.kr/bbs/doai/729/190683/artclView.do'), InvalidResponseError, 'doai 취업/이벤트 board');
   assert.throws(() => selectSources('eng'), /Unknown source "eng"/);
 });

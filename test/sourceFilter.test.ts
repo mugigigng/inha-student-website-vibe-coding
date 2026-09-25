@@ -13,6 +13,7 @@ import {
 const MAIN = 'inha-main-notice';
 const AICC = 'inha-aicc-notice';
 const CSE = 'inha-cse-notice';
+const DOAI = 'inha-doai-notice';
 
 const cse: Profile = { college: 'AI융합대학', major: '컴퓨터공학과', year: 2, entranceYear: 2025, interests: [] };
 const ds: Profile = { ...cse, major: '데이터사이언스학과' }; // same college, department board not collected
@@ -36,7 +37,8 @@ const pick = (value: string | null, profile: Profile | null) => notices.filter((
 
 test('one button per board in NOTICE_SOURCES (not per kind), with counts; cross-posts count on each board', () => {
   const opts = sourceOptions(notices, null);
-  assert.deepEqual(opts.map((o) => [o.value, o.count]), [['all', 4], [MAIN, 2], [AICC, 1], [CSE, 2]]);
+  // 인공지능공학과 was added by registering it in NOTICE_SOURCES only: its button appears (0 notices here)
+  assert.deepEqual(opts.map((o) => [o.value, o.count]), [['all', 4], [MAIN, 2], [AICC, 1], [CSE, 2], [DOAI, 0]]);
   assert.equal(opts.length, 1 + NOTICE_SOURCES.length, 'new boards appear without code changes');
   assert.deepEqual(pick(CSE, null), [2, 4]);
   assert.deepEqual(pick(MAIN, null), [1, 2]);
@@ -49,6 +51,11 @@ test('shortcuts: "내 학과" only when that department board is collected; "내
   assert.deepEqual(pick(MY_COLLEGE, cse), [3]);
   assert.ok(!sourceOptions(notices, ds).some((o) => o.value === MY_MAJOR), 'no 내 학과 for a department without a board');
   assert.deepEqual(myBoards(ds), { major: null, college: sourceMeta(AICC) });
+  // 인공지능공학과 now has a board: "내 학과" points at it, and never at CSE
+  const ai: Profile = { ...cse, major: '인공지능공학과' };
+  assert.deepEqual(myBoards(ai).major, sourceMeta(DOAI));
+  assert.deepEqual(resolveSource(MY_MAJOR, ai), { type: 'boards', ids: [DOAI] });
+  assert.deepEqual(pick(MY_MAJOR, ai), []);
 });
 
 test('a profile whose board is not collected sees an honest "not collected" state, never another department\'s notices', () => {
@@ -61,10 +68,13 @@ test('a profile whose board is not collected sees an honest "not collected" stat
   assert.deepEqual(resolveSource(MY_MAJOR, null), { type: 'all' });
 });
 
-test('old ?source=main|college|department links still work and are rewritten to the board id', () => {
+test('old ?source=main|college|department links still work (rewritten to the board id when a kind has one board)', () => {
+  // two department boards now (CSE, 인공지능공학과): the old link keeps filtering to both
+  assert.deepEqual(resolveSource('department', null), { type: 'boards', ids: [CSE, DOAI] });
   assert.deepEqual(pick('department', null), [2, 4]);
+  assert.equal(canonicalSourceParam('department'), null, 'several boards: the kind value is kept, not guessed');
   assert.deepEqual(pick('college', null), [3]);
-  assert.equal(canonicalSourceParam('department'), CSE);
+  assert.equal(canonicalSourceParam('college'), AICC);
   assert.equal(canonicalSourceParam('main'), MAIN);
   assert.equal(canonicalSourceParam('removed-board'), 'all', 'unknown value → all sources');
   for (const ok of [null, 'all', CSE, MY_MAJOR, MY_COLLEGE]) assert.equal(canonicalSourceParam(ok), null);

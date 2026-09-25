@@ -7,6 +7,7 @@ Sources the crawler is allowed to read. One module per source in `src/sources/`.
 | `main` | `inha-main-notice` | 본교 (main) | 인하대학교 공지사항 | list page 1 |
 | `aicc` | `inha-aicc-notice` | 단과대 (college) | AI융합대학 공지사항 | latest 10 |
 | `cse` | `inha-cse-notice` | 학과 (department) | 컴퓨터공학과 공지사항 | latest 10 |
+| `ai` | `inha-doai-notice` | 학과 (department) | 인공지능공학과 공지사항 | latest 10 |
 
 `npm run ingest` runs all three in this order. `--source cse,aicc` picks boards, and `--limit N` overrides the per-run default. A board that fails (even its list page) never stops the others.
 
@@ -69,6 +70,22 @@ AI융합대학 is the college 컴퓨터공학과 belongs to. It was renamed from
 
 `https://cse.inha.ac.kr/` itself is only a JavaScript redirect ("site move") to `/cse/index.do`, so the module uses the board URLs above directly. Other CSE boards are not collected (yet): 243 졸업예정자 공지 and 244 취업정보.
 
+## `inha-doai-notice` — 인공지능공학과 공지사항
+
+인공지능공학과 is in AI융합대학. The same name is used in `src/inhaCatalog.ts`, on the official page https://www.inha.ac.kr/kr/3907/subview.do and in the department site title. The site was found through the department link on https://aicc.inha.ac.kr/act/index.do (checked 2026-09-25).
+
+| | |
+|---|---|
+| Board (list) | `https://doai.inha.ac.kr/bbs/doai/731/artclList.do?page=N` (the "공지사항 더보기" link on https://doai.inha.ac.kr/doai/index.do) |
+| Article URL pattern | `https://doai.inha.ac.kr/bbs/doai/731/{articleId}/artclView.do` |
+| Module | [`src/sources/inhaDoaiNotice.ts`](../src/sources/inhaDoaiNotice.ts) |
+| Access | Public, no login, server-rendered HTML (same K2Web CMS; `k2web.ts` parses it unchanged) |
+| robots.txt | Only `User-agent: Yeti` / `Disallow: /bbs/*`. No rule for other user agents, so allowed (checked 2026-09-25) |
+| Dedup key | `(source, articleId)` |
+| Status | **Registered** (latest 10 per run); not ingested yet |
+
+`https://doai.inha.ac.kr/` itself is only a JavaScript redirect ("site move") to `/doai/index.do`, so the module uses the board URLs above directly. The other board on the front page, 729 취업/이벤트, is not collected.
+
 ### Page structure (college and department boards)
 
 Same as the main board, with three differences:
@@ -79,7 +96,7 @@ Same as the main board, with three differences:
 | Metadata `dl` | 작성일, 분류, 작성자 | 작성일, 수정일, 작성자, 조회수 (AI융합대학 also has 글번호). **No 분류** → `boardCategory` is `null` |
 | Body images | relative or main-site URLs | may point to another Inha host (e.g. `swcc.inha.ac.kr/CrossEditor/...`); resolved against the board's origin |
 
-Poster-only posts (the body is an image and has no text, e.g. aicc 191375, cse 191227 and 190971) fail with `EmptyContentError` and are not stored, just like on the main board.
+Poster-only posts (the body is an image and has no text, e.g. aicc 191375, cse 191227 and 190971, doai 191467) fail with `EmptyContentError` and are not stored, just like on the main board.
 
 Offline parser tests use real pages saved on 2026-09-25 in `test/fixtures/sources/` (`test/sources.test.ts`).
 

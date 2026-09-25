@@ -1,5 +1,6 @@
 import * as aicc from './inhaAiccNotice.ts';
 import * as cse from './inhaCseNotice.ts';
+import * as doai from './inhaDoaiNotice.ts';
 import type { BoardSource } from './k2web.ts';
 import * as main from './inhaMainNotice.ts';
 
@@ -19,6 +20,7 @@ export const SOURCES: SourceEntry[] = [
   { id: main.SOURCE, alias: 'main', board: main.board },
   { id: aicc.SOURCE, alias: 'aicc', board: aicc.board, defaultLimit: 10 },
   { id: cse.SOURCE, alias: 'cse', board: cse.board, defaultLimit: 10 },
+  { id: doai.SOURCE, alias: 'ai', board: doai.board, defaultLimit: 10 },
 ];
 
 /** "cse,aicc" / "inha-cse-notice" → entries in SOURCES order. Throws on an unknown name. */

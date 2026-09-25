@@ -15,7 +15,7 @@ const USAGE = `Usage:
   npm run crawl -- <notice-url>              fetch + parse only (no DB, no AI)
   npm run poc   -- <notice-url> [--reanalyze] fetch -> DB -> AI -> DB -> print
   npm run show  [-- <notice-id>]             print stored notices + latest analysis
-  npm run ingest [-- --source main|aicc|cse[,...]] [--pages N] [--limit N] [--no-ai] [--upgrade-prompt]
+  npm run ingest [-- --source main|aicc|cse|ai[,...]] [--pages N] [--limit N] [--no-ai] [--upgrade-prompt]
                                              crawl board lists (all sources by default) -> new/updated/duplicate
                                              detection -> DB -> AI only where needed`;
 

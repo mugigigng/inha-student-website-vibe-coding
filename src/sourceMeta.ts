@@ -19,6 +19,7 @@ export const NOTICE_SOURCES: SourceMeta[] = [
   { id: 'inha-main-notice', kind: 'main', college: null, major: null },
   { id: 'inha-aicc-notice', kind: 'college', college: 'AI융합대학', major: null },
   { id: 'inha-cse-notice', kind: 'department', college: 'AI융합대학', major: '컴퓨터공학과' },
+  { id: 'inha-doai-notice', kind: 'department', college: 'AI융합대학', major: '인공지능공학과' },
 ];
 
 const UNKNOWN: Omit<SourceMeta, 'id'> = { kind: 'main', college: null, major: null };

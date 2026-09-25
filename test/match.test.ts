@@ -137,6 +137,34 @@ test('H: no profile → no recommendations, general upcoming dates, all notices 
   assert.deepEqual(home.upcoming.map((e) => e.notice), [a]);
 });
 
+test('I: a notice from the student\'s own department/college board ranks higher (no AI, reason shown)', () => {
+  const me: Profile = { ...cse1, interests: [] };
+  const mech: Profile = { ...cse1, college: '공과대학', major: '기계공학과' };
+  const ds: Profile = { ...cse1, major: '데이터사이언스학과' }; // same college (AI융합대학), other department
+
+  const dept = notice('참가 희망 학생', { sources: ['inha-cse-notice'] });
+  const r = matchNotice(me, dept, TODAY);
+  assert.equal(r.relevanceScore, 35);
+  assert.equal(r.matchLevel, 'medium');
+  assert.deepEqual(r.matchReasons, ['컴퓨터공학과 게시판 공지']);
+  assert.deepEqual(r.matchReasonsEn, ['Posted on the 컴퓨터공학과 board']);
+  assert.equal(matchNotice(mech, dept, TODAY).relevanceScore, 0, 'another college gets no board bonus');
+  assert.deepEqual(matchNotice(ds, dept, TODAY).matchReasons, ['AI융합대학 게시판 공지'], 'dept board counts as own college for a sibling major');
+
+  const college = notice('참가 희망 학생', { sources: ['inha-aicc-notice'] });
+  assert.deepEqual(matchNotice(me, college, TODAY).matchReasons, ['AI융합대학 게시판 공지']);
+  assert.equal(matchNotice(me, college, TODAY).relevanceScore, 20);
+
+  // cross-posted: the department board counts once, the title naming it adds nothing more
+  const both = notice('참가 희망 학생', { title: '[컴퓨터공학과] 설명회', sources: ['inha-main-notice', 'inha-aicc-notice', 'inha-cse-notice'] });
+  assert.deepEqual(matchNotice(me, both, TODAY).matchReasons, ['컴퓨터공학과 게시판 공지']);
+
+  // exclusions still win over the board bonus
+  assert.equal(matchNotice(me, notice('일반대학원 석사과정 대학원생', { sources: ['inha-cse-notice'] }), TODAY).matchLevel, 'none');
+  // the old college name in a notice still means this college
+  assert.deepEqual(matchNotice(me, notice('소프트웨어융합대학 재학생'), TODAY).matchReasons, ['AI융합대학 대상']);
+});
+
 test('profile from storage is validated; bad data is ignored', () => {
   assert.equal(parseProfile(null), null);
   assert.equal(parseProfile({ major: '컴퓨터공학과', college: '소프트웨어융합대학', year: 7, entranceYear: 2026 }), null);

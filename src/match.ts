@@ -10,6 +10,7 @@ import type { NoticeListItem } from './api/types.ts';
 import type { Category } from './categories.ts';
 import { INHA_COLLEGES } from './inhaCatalog.ts';
 import { INTERESTS, type InterestId, type Profile } from './profile.ts';
+import { sourceMeta } from './sourceMeta.ts';
 
 export type MatchLevel = 'high' | 'medium' | 'low' | 'none';
 
@@ -32,6 +33,8 @@ export const SCORE = {
   college: 30,
   titleMajor: 35,
   titleCollege: 20,
+  sourceMajor: 35,
+  sourceCollege: 20,
   year: 25,
   allUndergrad: 25,
   interestCategory: 30,
@@ -198,8 +201,27 @@ export function matchNotice(profile: Profile, notice: NoticeListItem, today: str
     }
   }
 
-  // 1b. the posting unit in the title ("[컴퓨터공학과] …"): positive signal only, since cross-major notices exist
+  // 1b. posted on the student's own department/college board (src/sourceMeta.ts): positive signal
+  // only, like 1c, since those boards also carry notices for other groups (e.g. graduate students)
+  let fromOwnBoard = false;
   if (!specific) {
+    const boards = notice.sources.map((s) => sourceMeta(s.source));
+    const deptBoard = boards.find((b) => b.major && b.major === profile.major);
+    const collegeBoard = boards.find((b) => b.college && b.college === profile.college);
+    if (deptBoard) {
+      score += SCORE.sourceMajor;
+      reason(`${profile.major} 게시판 공지`, `Posted on the ${profile.major} board`);
+      fromOwnBoard = true;
+    } else if (collegeBoard) {
+      score += SCORE.sourceCollege;
+      reason(`${profile.college} 게시판 공지`, `Posted on the ${profile.college} board`);
+      fromOwnBoard = true;
+    }
+  }
+
+  // 1c. the posting unit in the title ("[컴퓨터공학과] …"): positive signal only, since cross-major
+  // notices exist. Skipped when 1b fired (a department board's title naming itself adds nothing).
+  if (!specific && !fromOwnBoard) {
     const inTitle = findUnits(title);
     if (inTitle.majors.has(profile.major)) {
       score += SCORE.titleMajor;

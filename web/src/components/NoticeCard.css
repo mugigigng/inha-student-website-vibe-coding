@@ -38,6 +38,12 @@
   align-items: center;
   gap: 8px;
 }
+.card__tags {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
 .chip {
   padding: 1px 10px;
   border: 1px solid var(--ink);

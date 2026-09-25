@@ -58,32 +58,6 @@ html[lang='ko'] .hero__title {
   letter-spacing: -0.01em;
   color: var(--ink-muted);
 }
-.hero__search {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-  max-width: 480px;
-  margin: 22px 0 0;
-}
-.hero__search-input {
-  flex: 1;
-  min-width: 0;
-  border: 0;
-  border-bottom: 1px solid var(--rule);
-  background: none;
-  padding: 8px 2px;
-  font-family: inherit;
-  font-size: var(--text-normal);
-  color: var(--ink);
-}
-.hero__search-input::placeholder {
-  color: var(--ink-muted);
-}
-.hero__search-input:focus {
-  outline: none;
-  border-color: var(--accent);
-}
 @keyframes hero-drift {
   to {
     transform: translateY(-12vh);
@@ -191,6 +165,40 @@ html[lang='ko'] .hero__title {
   display: flex;
   gap: 8px;
 }
+/* keyword search: sits right above the category/source filters */
+.list__search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 0 16px;
+}
+.list__search-input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  border-bottom: 1px solid var(--rule);
+  background: none;
+  padding: 8px 2px;
+  font-family: inherit;
+  font-size: var(--text-normal);
+  color: var(--ink);
+}
+.list__search-input::placeholder {
+  color: var(--ink-muted);
+}
+.list__search-input:focus {
+  outline: none;
+  border-color: var(--accent);
+}
+/* "○○학과 게시판은 아직 수집하지 않아요" under the source filter */
+.list__source-note {
+  margin: 8px 0 0;
+  font-size: var(--text-small);
+  font-style: italic;
+  color: var(--ink-muted);
+}
 .list__grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
@@ -221,7 +229,7 @@ html[lang='ko'] .hero__title {
   .hero__stats dd {
     font-size: 36px;
   }
-  .hero__search {
+  .list__search {
     max-width: none;
   }
   .list__head {
@@ -230,7 +238,7 @@ html[lang='ko'] .hero__title {
   }
 }
 @media (max-width: 420px) {
-  .hero__search {
+  .list__search {
     flex-wrap: wrap;
   }
 }

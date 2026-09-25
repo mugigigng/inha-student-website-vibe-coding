@@ -16,6 +16,7 @@ import { buildHome, UPCOMING_DAYS } from '../lib/personalize.ts';
 import { profileLabel, useProfile } from '../lib/profile.tsx';
 import { matchesSearch } from '../lib/search.ts';
 import { createSearchSync } from '../lib/searchSync.ts';
+import { ALL_SOURCES, boardUnit, canonicalSourceParam, matchesSource, myBoards, resolveSource, sourceOptions } from '../lib/sourceFilter.ts';
 import { scrollToTarget } from '../lib/smoothScroll.ts';
 import './NoticeListPage.css';
 
@@ -44,6 +45,7 @@ export function NoticeListPage() {
   const filter = !rawFilter || rawFilter === '전체' ? ALL : rawFilter; // '전체' = older links
   const sort: Sort = params.get('sort') === 'deadline' ? 'deadline' : 'latest';
   const query = params.get('q') ?? '';
+  const rawSource = params.get('source');
 
   const update = (key: string, value: string, fallback: string) =>
     setParams((p) => {
@@ -72,17 +74,6 @@ export function NoticeListPage() {
     setSearchText('');
   };
 
-  // Scroll to the results once, when a search starts (query goes from empty to non-empty from user
-  // input) — not on every keystroke while refining an existing query, and not on initial load (e.g.
-  // opening a shared `?q=` link shouldn't yank the page down).
-  const mountedRef = useRef(false);
-  const prevQueryRef = useRef(query);
-  useEffect(() => {
-    if (mountedRef.current && !prevQueryRef.current && query) scrollToTarget('#notices', -72);
-    mountedRef.current = true;
-    prevQueryRef.current = query;
-  }, [query]);
-
   const notices = state.status === 'ok' ? state.data : [];
   const options = useMemo<FilterOption[]>(() => {
     const count = (c: string) => notices.filter((n) => categoryOf(n) === c).length;
@@ -93,15 +84,41 @@ export function NoticeListPage() {
     ].filter((o) => o.value === ALL || o.count > 0);
   }, [notices, lang, t]);
 
+  // Personalization only orders/highlights; the "전체 공지" list below is filtered only by what the user picks.
+  const { profile } = useProfile();
+
+  // Source filter: one button per board (from NOTICE_SOURCES) + "내 학과"/"내 단과대" shortcuts.
+  // A cross-posted notice counts for every board it appears on. See lib/sourceFilter.ts.
+  const sourceSel = useMemo(() => resolveSource(rawSource, profile), [rawSource, profile]);
+  const sourceValue = rawSource ?? ALL_SOURCES;
+  const sourceButtons = useMemo<FilterOption[]>(
+    () =>
+      sourceOptions(notices, profile).map((o) => ({
+        value: o.value,
+        count: o.count,
+        label:
+          o.kind === 'all' ? t.source.all
+          : o.kind === 'shortcut' ? (o.scope === 'major' ? t.source.myMajor : t.source.myCollege)
+          : (boardUnit(o.board) ?? t.source.main),
+      })),
+    [notices, profile, t],
+  );
+  const myMajorBoard = myBoards(profile).major;
+
+  // Old ?source=main|college|department links → the board id (once, replacing the history entry).
+  useEffect(() => {
+    const canonical = canonicalSourceParam(rawSource);
+    if (canonical !== null) update('source', canonical, ALL_SOURCES);
+  }, [rawSource]); // `update` is recreated every render; only a new ?source= value matters
+
   const visible = useMemo(() => {
     const list = notices
       .filter((n) => filter === ALL || categoryOf(n) === filter)
+      .filter((n) => matchesSource(n, sourceSel))
       .filter((n) => matchesSearch(n, query, lang));
     return sort === 'deadline' ? [...list].sort(byDeadline) : list; // API is already newest first
-  }, [notices, filter, sort, query, lang]);
+  }, [notices, filter, sourceSel, sort, query, lang]);
 
-  // Personalization only orders/highlights; the "전체 공지" list below uses `notices` unfiltered.
-  const { profile } = useProfile();
   const home = useMemo(() => buildHome(notices, profile, todayKst()), [notices, profile]);
 
   const analyzed = notices.filter((n) => n.analysis).length;
@@ -130,31 +147,6 @@ export function NoticeListPage() {
         <p className="hero__tagline notranslate" translate="no">
           {t.home.tagline}
         </p>
-        {state.status === 'ok' && (
-          <div className="hero__search">
-            <input
-              type="search"
-              className="hero__search-input"
-              value={searchText}
-              onChange={(e) => {
-                setSearchText(e.target.value);
-                sync.onChange(e.target.value);
-              }}
-              onCompositionStart={() => sync.onCompositionStart()}
-              onCompositionEnd={(e) => {
-                setSearchText(e.currentTarget.value);
-                sync.onCompositionEnd(e.currentTarget.value);
-              }}
-              placeholder={t.home.searchPlaceholder}
-              aria-label={t.home.searchLabel}
-            />
-            {searchText && (
-              <button type="button" className="pill" onClick={clearSearch}>
-                {t.home.searchClear}
-              </button>
-            )}
-          </div>
-        )}
         <div className="hero__foot">
           {state.status === 'ok' && (
             <dl className="hero__stats">
@@ -259,12 +251,53 @@ export function NoticeListPage() {
         )}
         {state.status === 'ok' && (
           <>
+            <div className="list__search">
+              <input
+                type="search"
+                className="list__search-input"
+                value={searchText}
+                onChange={(e) => {
+                  setSearchText(e.target.value);
+                  sync.onChange(e.target.value);
+                }}
+                onCompositionStart={() => sync.onCompositionStart()}
+                onCompositionEnd={(e) => {
+                  setSearchText(e.currentTarget.value);
+                  sync.onCompositionEnd(e.currentTarget.value);
+                }}
+                placeholder={t.home.searchPlaceholder}
+                aria-label={t.home.searchLabel}
+              />
+              {searchText && (
+                <button type="button" className="pill" onClick={clearSearch}>
+                  {t.home.searchClear}
+                </button>
+              )}
+            </div>
             <CategoryFilter options={options} value={filter} onChange={(v) => update('category', v, ALL)} label={t.home.filterGroup} />
-            {visible.length === 0 ? (
+            <CategoryFilter options={sourceButtons} value={sourceValue} onChange={(v) => update('source', v, ALL_SOURCES)} label={t.source.group} />
+            {/* no "내 학과" button when that board isn't crawled: say so instead of showing other departments */}
+            {profile && !myMajorBoard && <p className="list__source-note">{t.source.notCollected(profile.major)}</p>}
+            {sourceSel.type === 'uncollected' ? (
+              <StateMessage title={t.source.notCollected(sourceSel.unit)} action={{ label: t.source.showAll, onClick: () => update('source', ALL_SOURCES, ALL_SOURCES) }}>
+                {t.source.notCollectedBody}
+              </StateMessage>
+            ) : visible.length === 0 ? (
               query ? (
                 <StateMessage title={t.home.emptySearch(query)} action={{ label: t.home.searchClear, onClick: clearSearch }} />
               ) : (
-                <StateMessage title={t.home.emptyFilter} action={{ label: t.home.showAll, onClick: () => update('category', ALL, ALL) }} />
+                <StateMessage
+                  title={t.home.emptyFilter}
+                  action={{
+                    label: t.home.showAll,
+                    onClick: () =>
+                      setParams((p) => {
+                        p.delete('category');
+                        p.delete('source');
+                        return p;
+                      }, { replace: true, preventScrollReset: true }),
+                  }}
+                />
               )
             ) : (
               <ul className="list__grid">

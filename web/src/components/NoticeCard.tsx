@@ -7,6 +7,7 @@ import { categoryName, englishMissing, matchReasons, noticeSummaryLine, noticeTi
 import { useLanguage } from '../lib/language.tsx';
 import { bestSearchMatch, type HighlightPart, highlightTerms, searchTerms } from '../lib/search.ts';
 import { DdayBadge } from './DdayBadge.tsx';
+import { SourceBadges } from './SourceBadges.tsx';
 import './NoticeCard.css';
 
 /** The deadline a student cares about: explicit deadline, else end of the application period. */
@@ -31,13 +32,16 @@ export function NoticeCard({ notice, match, query }: { notice: NoticeListItem; m
   return (
     <article className="card" data-status={notice.analysisStatus}>
       <div className="card__top">
-        {a ? (
-          <span className="chip" style={{ background: CATEGORY_TINT[a.category] }}>
-            {categoryName(a.category, lang)}
-          </span>
-        ) : (
-          <span className="chip chip--pending">{t.common.pending}</span>
-        )}
+        <span className="card__tags">
+          {a ? (
+            <span className="chip" style={{ background: CATEGORY_TINT[a.category] }}>
+              {categoryName(a.category, lang)}
+            </span>
+          ) : (
+            <span className="chip chip--pending">{t.common.pending}</span>
+          )}
+          <SourceBadges sources={notice.sources} />
+        </span>
         <DdayBadge deadline={deadline} />
       </div>
 

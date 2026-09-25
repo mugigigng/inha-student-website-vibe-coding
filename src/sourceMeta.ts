@@ -20,6 +20,9 @@ export const NOTICE_SOURCES: SourceMeta[] = [
   { id: 'inha-aicc-notice', kind: 'college', college: 'AI융합대학', major: null },
   { id: 'inha-cse-notice', kind: 'department', college: 'AI융합대학', major: '컴퓨터공학과' },
   { id: 'inha-doai-notice', kind: 'department', college: 'AI융합대학', major: '인공지능공학과' },
+  { id: 'inha-datascience-notice', kind: 'department', college: 'AI융합대학', major: '데이터사이언스학과' },
+  { id: 'inha-designtech-notice', kind: 'department', college: 'AI융합대학', major: '디자인테크놀로지학과' },
+  { id: 'inha-sme-notice', kind: 'department', college: 'AI융합대학', major: '스마트모빌리티공학과' },
 ];
 
 const UNKNOWN: Omit<SourceMeta, 'id'> = { kind: 'main', college: null, major: null };

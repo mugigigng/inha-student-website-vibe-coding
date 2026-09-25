@@ -15,7 +15,7 @@ const USAGE = `Usage:
   npm run crawl -- <notice-url>              fetch + parse only (no DB, no AI)
   npm run poc   -- <notice-url> [--reanalyze] fetch -> DB -> AI -> DB -> print
   npm run show  [-- <notice-id>]             print stored notices + latest analysis
-  npm run ingest [-- --source main|aicc|cse|ai[,...]] [--pages N] [--limit N] [--full] [--no-ai] [--upgrade-prompt]
+  npm run ingest [-- --source main|aicc|cse|ai|ds|dt|sme[,...]] [--pages N] [--limit N] [--full] [--no-ai] [--upgrade-prompt]
                                              crawl board lists (all sources by default) -> fetch only new posts
                                              (+ known ones posted in the last 7 days or with a date not passed yet;
                                              --full re-fetches all) -> new/updated/duplicate detection -> DB -> AI

@@ -14,9 +14,12 @@ const MAIN = 'inha-main-notice';
 const AICC = 'inha-aicc-notice';
 const CSE = 'inha-cse-notice';
 const DOAI = 'inha-doai-notice';
+const DS = 'inha-datascience-notice';
+const DT = 'inha-designtech-notice';
+const SME = 'inha-sme-notice';
 
 const cse: Profile = { college: 'AI융합대학', major: '컴퓨터공학과', year: 2, entranceYear: 2025, interests: [] };
-const ds: Profile = { ...cse, major: '데이터사이언스학과' }; // same college, department board not collected
+const ds: Profile = { ...cse, major: '데이터사이언스학과' }; // same college, own department board (no notices in these fixtures)
 const mech: Profile = { ...cse, college: '공과대학', major: '기계공학과' }; // neither board collected
 
 function notice(id: number, sources: string[], title = `공지 ${id}`): NoticeListItem {
@@ -37,8 +40,9 @@ const pick = (value: string | null, profile: Profile | null) => notices.filter((
 
 test('one button per board in NOTICE_SOURCES (not per kind), with counts; cross-posts count on each board', () => {
   const opts = sourceOptions(notices, null);
-  // 인공지능공학과 was added by registering it in NOTICE_SOURCES only: its button appears (0 notices here)
-  assert.deepEqual(opts.map((o) => [o.value, o.count]), [['all', 4], [MAIN, 2], [AICC, 1], [CSE, 2], [DOAI, 0]]);
+  // 인공지능공학과, 데이터사이언스학과, 디자인테크놀로지학과, 스마트모빌리티공학과 were added by registering them in
+  // NOTICE_SOURCES only: their buttons appear (0 notices here)
+  assert.deepEqual(opts.map((o) => [o.value, o.count]), [['all', 4], [MAIN, 2], [AICC, 1], [CSE, 2], [DOAI, 0], [DS, 0], [DT, 0], [SME, 0]]);
   assert.equal(opts.length, 1 + NOTICE_SOURCES.length, 'new boards appear without code changes');
   assert.deepEqual(pick(CSE, null), [2, 4]);
   assert.deepEqual(pick(MAIN, null), [1, 2]);
@@ -49,8 +53,11 @@ test('shortcuts: "내 학과" only when that department board is collected; "내
   assert.deepEqual(sourceOptions(notices, cse).slice(0, 3).map((o) => [o.value, o.count]), [['all', 4], [MY_MAJOR, 2], [MY_COLLEGE, 1]]);
   assert.deepEqual(pick(MY_MAJOR, cse), [2, 4]);
   assert.deepEqual(pick(MY_COLLEGE, cse), [3]);
-  assert.ok(!sourceOptions(notices, ds).some((o) => o.value === MY_MAJOR), 'no 내 학과 for a department without a board');
-  assert.deepEqual(myBoards(ds), { major: null, college: sourceMeta(AICC) });
+  assert.ok(!sourceOptions(notices, mech).some((o) => o.value === MY_MAJOR), 'no 내 학과 for a department without a board');
+  assert.deepEqual(myBoards(mech), { major: null, college: null });
+  // 데이터사이언스학과 has its own board now: "내 학과" is offered and points at it
+  assert.ok(sourceOptions(notices, ds).some((o) => o.value === MY_MAJOR));
+  assert.deepEqual(myBoards(ds), { major: sourceMeta(DS), college: sourceMeta(AICC) });
   // 인공지능공학과 now has a board: "내 학과" points at it, and never at CSE
   const ai: Profile = { ...cse, major: '인공지능공학과' };
   assert.deepEqual(myBoards(ai).major, sourceMeta(DOAI));
@@ -69,8 +76,8 @@ test('a profile whose board is not collected sees an honest "not collected" stat
 });
 
 test('old ?source=main|college|department links still work (rewritten to the board id when a kind has one board)', () => {
-  // two department boards now (CSE, 인공지능공학과): the old link keeps filtering to both
-  assert.deepEqual(resolveSource('department', null), { type: 'boards', ids: [CSE, DOAI] });
+  // several department boards now: the old link keeps filtering to all of them
+  assert.deepEqual(resolveSource('department', null), { type: 'boards', ids: [CSE, DOAI, DS, DT, SME] });
   assert.deepEqual(pick('department', null), [2, 4]);
   assert.equal(canonicalSourceParam('department'), null, 'several boards: the kind value is kept, not guessed');
   assert.deepEqual(pick('college', null), [3]);

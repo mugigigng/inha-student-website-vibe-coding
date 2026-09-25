@@ -8,8 +8,13 @@ Sources the crawler is allowed to read. One module per source in `src/sources/`.
 | `aicc` | `inha-aicc-notice` | 단과대 (college) | AI융합대학 공지사항 | latest 10 |
 | `cse` | `inha-cse-notice` | 학과 (department) | 컴퓨터공학과 공지사항 | latest 10 |
 | `ai` | `inha-doai-notice` | 학과 (department) | 인공지능공학과 공지사항 | latest 10 |
+| `ds` | `inha-datascience-notice` | 학과 (department) | 데이터사이언스학과 공지사항 | latest 10 |
+| `dt` | `inha-designtech-notice` | 학과 (department) | 디자인테크놀로지학과 공지사항 | latest 10 |
+| `sme` | `inha-sme-notice` | 학과 (department) | 스마트모빌리티공학과 공지사항 | latest 10 |
 
 `npm run ingest` runs all boards in this order. `--source cse,aicc` picks boards, and `--limit N` overrides the per-run default. The limit counts regular posts only; pinned posts come on top of it (see [Incremental crawling](#incremental-crawling)). A board that fails (even its list page) never stops the others.
+
+With these boards, every AI융합대학 major in `src/inhaCatalog.ts` has its department board collected.
 
 ## `inha-main-notice` — 인하대학교 대표 홈페이지 공지사항
 
@@ -86,6 +91,24 @@ AI융합대학 is the college 컴퓨터공학과 belongs to. It was renamed from
 
 `https://doai.inha.ac.kr/` itself is only a JavaScript redirect ("site move") to `/doai/index.do`, so the module uses the board URLs above directly. The other board on the front page, 729 취업/이벤트, is not collected.
 
+## 데이터사이언스학과 · 디자인테크놀로지학과 · 스마트모빌리티공학과 (AI융합대학)
+
+The remaining AI융합대학 departments. They were found through the department links on https://aicc.inha.ac.kr/act/index.do, and the names match `src/inhaCatalog.ts`. Each board is the "공지사항더보기" link on the department's front page (checked 2026-09-25).
+
+| Source key | Module | Board (list) | Article URL pattern |
+|---|---|---|---|
+| `inha-datascience-notice` | [`inhaDatascienceNotice.ts`](../src/sources/inhaDatascienceNotice.ts) | `https://datascience.inha.ac.kr/bbs/datascience/746/artclList.do?page=N` | `…/bbs/datascience/746/{articleId}/artclView.do` |
+| `inha-designtech-notice` | [`inhaDesigntechNotice.ts`](../src/sources/inhaDesigntechNotice.ts) | `https://designtech.inha.ac.kr/bbs/designtech/742/artclList.do?page=N` | `…/bbs/designtech/742/{articleId}/artclView.do` |
+| `inha-sme-notice` | [`inhaSmeNotice.ts`](../src/sources/inhaSmeNotice.ts) | `https://sme.inha.ac.kr/bbs/sme/703/artclList.do?page=N` | `…/bbs/sme/703/{articleId}/artclView.do` |
+
+- **Access:** public, no login, server-rendered K2Web. `k2web.ts` parses them unchanged. Each site root is the same JavaScript "site move" redirect as cse/doai.
+- **robots.txt:** only `User-agent: Yeti` / `Disallow: /bbs/*`, so this crawler is allowed (checked 2026-09-25).
+- **Dedup key:** `(source, articleId)`. **Status:** Registered (latest 10 per run); not ingested yet.
+- **작성자:** commented out in these sites' HTML, so `author` is `null`.
+- **Not collected:**
+  - 취업/이벤트 boards: datascience 753, designtech 743, sme 3119.
+  - sme 700 (학과소식: news and awards, not notices).
+
 ### Page structure (college and department boards)
 
 Same as the main board, with three differences:
@@ -98,7 +121,7 @@ Same as the main board, with three differences:
 
 Poster-only posts (the body is an image and has no text, e.g. aicc 191375, cse 191227 and 190971, doai 191467) fail with `EmptyContentError` and are not stored, just like on the main board.
 
-A recent pinned post is often listed twice: once as a pinned `tr.headline` row and once in the normal flow. `uniqueListed()` in `k2web.ts` keeps one row and treats it as regular.
+A recent pinned post is often listed twice: once as a pinned `tr.headline` row and once in the normal flow (e.g. designtech 191870, sme 191962). `uniqueListed()` in `k2web.ts` keeps one row and treats it as regular.
 
 Offline parser tests use real pages saved on 2026-09-25 in `test/fixtures/sources/` (`test/sources.test.ts`).
 

@@ -2,7 +2,7 @@ import type { DatabaseSync } from 'node:sqlite';
 import { PROMPT_VERSION, type AnalysisResult } from './analyze.ts';
 import { contentHash, hasCurrentAnalysis, insertAnalysis, upsertNotice } from './db.ts';
 import { AiApiError } from './errors.ts';
-import type { ListedNotice } from './sources/inhaMainNotice.ts';
+import type { ListedNotice } from './sources/k2web.ts';
 import type { RawNotice } from './types.ts';
 
 // Ingestion: list -> fetch each -> upsert -> analyze only if no analysis exists for
@@ -28,6 +28,8 @@ export interface IngestDeps {
    * profile matching → (future) notifications. Must not throw; errors are logged and ignored.
    */
   onAnalyzed?: (noticeId: number) => void;
+  /** AI already stopped earlier (e.g. by a previous source in ingestAll): defer instead of calling it. */
+  aiStoppedReason?: string | null;
 }
 
 export interface IngestStats {
@@ -55,7 +57,7 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
   const stats: IngestStats = {
     found: 0, new: 0, updated: 0, unchanged: 0, crawlFailed: 0,
     analyzed: 0, analysisFailed: 0, analysisDeferred: 0, analysisSkipped: 0,
-    aiStoppedReason: deps.analyze ? null : 'AI disabled for this run', errors: [],
+    aiStoppedReason: deps.analyze ? (deps.aiStoppedReason ?? null) : 'AI disabled for this run', errors: [],
   };
 
   // Listing failure (site down, layout change) aborts the run: there is nothing to iterate.
@@ -146,6 +148,46 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
   }
 
   return stats;
+}
+
+export interface IngestSource {
+  id: string;
+  listNotices: () => Promise<ListedNotice[]>;
+  fetchNotice: (url: string) => Promise<RawNotice>;
+  /** Max listed notices for this source (overrides deps.limit when set by the caller). */
+  limit?: number;
+}
+
+export interface SourceRun {
+  source: string;
+  /** Listing failed (site down, layout change): nothing was processed for this source. */
+  listFailed: string | null;
+  stats: IngestStats | null;
+}
+
+/**
+ * Runs ingest() for each source in order. One source failing (even its listing) never stops
+ * the others. Once the AI stops (quota, bad key, overload), later sources defer too.
+ */
+export async function ingestAll(
+  sources: IngestSource[],
+  deps: Omit<IngestDeps, 'listNotices' | 'fetchNotice' | 'limit'>,
+): Promise<SourceRun[]> {
+  const { log = console.log } = deps;
+  const runs: SourceRun[] = [];
+  let aiStoppedReason = deps.aiStoppedReason ?? null;
+  for (const s of sources) {
+    log(`[SOURCE] ${s.id}`);
+    try {
+      const stats = await ingest({ ...deps, listNotices: s.listNotices, fetchNotice: s.fetchNotice, limit: s.limit, aiStoppedReason });
+      if (deps.analyze) aiStoppedReason = stats.aiStoppedReason;
+      runs.push({ source: s.id, listFailed: null, stats });
+    } catch (err) {
+      log(`[ERROR] Source ${s.id} listing failed, skipping it this run: ${describe(err)}`);
+      runs.push({ source: s.id, listFailed: describe(err), stats: null });
+    }
+  }
+  return runs;
 }
 
 const describe = (err: unknown) => `${(err as Error).name}: ${(err as Error).message}`.replace(/\s+/g, ' ').slice(0, 300);

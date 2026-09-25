@@ -12,7 +12,7 @@ import { parseNoticeHtml } from '../src/sources/inhaMainNotice.ts';
 import { buildHome } from '../web/src/lib/personalize.ts';
 
 const TODAY = '2026-09-24'; // fall semester: a 1st-year has completed 1 semester
-const cse1: Profile = { college: '소프트웨어융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: [] };
+const cse1: Profile = { college: 'AI융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: [] };
 
 let nextId = 1;
 function notice(target: string | null, opts: { title?: string; category?: string; deadline?: string | null } = {}): NoticeListItem {
@@ -137,6 +137,6 @@ test('profile from storage is validated; bad data is ignored', () => {
   assert.equal(parseProfile(null), null);
   assert.equal(parseProfile({ major: '컴퓨터공학과', college: '소프트웨어융합대학', year: 7, entranceYear: 2026 }), null);
   assert.deepEqual(parseProfile({ major: ' 컴퓨터공학과 ', college: '소프트웨어융합대학', year: '1', entranceYear: 2026, interests: ['scholarship', 'bogus', 'scholarship'] }), {
-    college: '소프트웨어융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: ['scholarship'],
+    college: 'AI융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: ['scholarship'],
   });
 });

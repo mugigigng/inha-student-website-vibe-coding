@@ -11,7 +11,7 @@ import { noticeSummaryLine, noticeTitle, translations } from '../web/src/lib/i18
 import { buildHome, buildNotifications } from '../web/src/lib/personalize.ts';
 
 const TODAY = '2026-09-24';
-const cse1: Profile = { college: '소프트웨어융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: ['scholarship', 'career'] };
+const cse1: Profile = { college: 'AI융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: ['scholarship', 'career'] };
 
 function notice(id: number, target: string, opts: { category?: string; en?: boolean; publishedAt?: string; deadline?: string } = {}): NoticeListItem {
   return {

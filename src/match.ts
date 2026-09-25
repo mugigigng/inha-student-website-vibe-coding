@@ -60,7 +60,7 @@ interface Term {
 }
 
 const TERMS: Term[] = INHA_COLLEGES.flatMap((c) => [
-  { term: c.college, college: c.college },
+  ...[c.college, ...(c.formerNames ?? [])].map((term) => ({ term, college: c.college })),
   ...c.majors.flatMap((mj) => [mj.name, ...(mj.aliases ?? [])].map((term) => ({ term, major: mj.name, college: c.college }))),
 ]).sort((a, b) => b.term.length - a.term.length); // longest first: "파이낸스경영학과" before "경영학과"
 

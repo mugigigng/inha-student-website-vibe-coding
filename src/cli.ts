@@ -2,7 +2,7 @@ import './env.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { createProvider, type AiProvider } from './ai/index.ts';
 import { analyzeNotice, PROMPT_VERSION } from './analyze.ts';
-import { contentHash, counts, DB_PATH, getNotice, hasCurrentAnalysis, insertAnalysis, listNoticesWithLatestAnalysis, openDb, upsertNotice } from './db.ts';
+import { contentHash, counts, currentGroupAnalysis, DB_PATH, getNotice, insertAnalysis, listNoticesWithLatestAnalysis, openDb, upsertNotice } from './db.ts';
 import { InvalidAiJsonError, PocError } from './errors.ts';
 import { getNoticeDetail } from './api/notices.ts';
 import { ingestAll, type IngestStats } from './ingest.ts';
@@ -134,7 +134,7 @@ async function runPipeline(url: string, reanalyze: boolean) {
   if (status === 'new') console.log(`  inserted notices.id=${noticeId} into ${DB_PATH}`);
   else if (status === 'updated') console.log(`  UPDATED notices.id=${noticeId}: ${changed.join(', ')} changed on the site; stored row refreshed`);
   else console.log(`  DUPLICATE: notices.id=${noticeId} already stored and unchanged. No new row inserted; crawled_at updated.`);
-  if (hasCurrentAnalysis(db, noticeId) && !reanalyze) {
+  if (currentGroupAnalysis(db, noticeId) !== null && !reanalyze) {
     console.log('  Analysis for the current content already exists; skipping the AI call (pass --reanalyze to force).');
     printStored(db, noticeId);
     return;

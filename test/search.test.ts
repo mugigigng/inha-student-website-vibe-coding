@@ -14,6 +14,7 @@ function notice(
     sourceNoticeId: String(id),
     title,
     sourceUrl: '',
+    sources: [],
     publishedAt: null,
     boardCategory: null,
     crawledAt: '',

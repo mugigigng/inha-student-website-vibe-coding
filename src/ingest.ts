@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { PROMPT_VERSION, type AnalysisResult } from './analyze.ts';
-import { contentHash, hasCurrentAnalysis, insertAnalysis, upsertNotice } from './db.ts';
+import { contentHash, currentGroupAnalysis, getNotice, insertAnalysis, upsertNotice } from './db.ts';
 import { AiApiError } from './errors.ts';
 import type { ListedNotice } from './sources/k2web.ts';
 import type { RawNotice } from './types.ts';
@@ -44,6 +44,8 @@ export interface IngestStats {
   analysisDeferred: number;
   /** Unchanged notices that already had a current analysis → no AI call. */
   analysisSkipped: number;
+  /** Of analysisSkipped: the analysis came from the same notice on another board (cross-source duplicate). */
+  duplicates: number;
   aiStoppedReason: string | null;
   errors: { noticeId: string; stage: 'crawl' | 'analysis'; message: string }[];
 }
@@ -56,7 +58,7 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
   const { db, log = console.log, crawlDelayMs = 300, aiDelayMs = 0 } = deps;
   const stats: IngestStats = {
     found: 0, new: 0, updated: 0, unchanged: 0, crawlFailed: 0,
-    analyzed: 0, analysisFailed: 0, analysisDeferred: 0, analysisSkipped: 0,
+    analyzed: 0, analysisFailed: 0, analysisDeferred: 0, analysisSkipped: 0, duplicates: 0,
     aiStoppedReason: deps.analyze ? (deps.aiStoppedReason ?? null) : 'AI disabled for this run', errors: [],
   };
 
@@ -88,9 +90,18 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
 
     // Existence, duplicate and change checks above are plain DB/hash comparisons.
     // Gemini is only reached below when no analysis exists for the current content.
-    const current = hasCurrentAnalysis(db, rowId);
-    const upgrade = current && deps.upgradePrompt && !hasCurrentAnalysis(db, rowId, PROMPT_VERSION);
-    if (current && !upgrade) {
+    // A notice cross-posted on several boards is one group with one analysis: any copy's current
+    // analysis counts (rule in src/dedup.ts, grouping in db.ts assignGroup).
+    const current = currentGroupAnalysis(db, rowId);
+    const upgrade = current !== null && deps.upgradePrompt && currentGroupAnalysis(db, rowId, PROMPT_VERSION) === null;
+    if (current !== null && current !== rowId && !upgrade) {
+      stats.analysisSkipped++;
+      stats.duplicates++;
+      const other = getNotice(db, current)!;
+      log(`[DUP] Notice ${id} is the same notice as #${current} (${other.source} ${other.source_notice_id}); reusing its analysis, no Gemini request`);
+      continue;
+    }
+    if (current !== null && !upgrade) {
       stats.analysisSkipped++;
       if (status === 'unchanged') log(`[SKIP] Unchanged notice ${id} (existing analysis is current; no Gemini request)`);
       else log(`[SKIP] Existing analysis for ${id} still valid (${changed.join(', ')} change only; no Gemini request)`);

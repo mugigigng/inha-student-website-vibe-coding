@@ -8,6 +8,7 @@ import { openDb } from '../src/db.ts';
 import { ingest } from '../src/ingest.ts';
 import { completedSemesters, matchNotice, notificationCandidates } from '../src/match.ts';
 import { parseProfile, type Profile } from '../src/profile.ts';
+import { sourceMeta } from '../src/sourceMeta.ts';
 import { parseNoticeHtml } from '../src/sources/inhaMainNotice.ts';
 import { buildHome } from '../web/src/lib/personalize.ts';
 
@@ -15,10 +16,13 @@ const TODAY = '2026-09-24'; // fall semester: a 1st-year has completed 1 semeste
 const cse1: Profile = { college: 'AI융합대학', major: '컴퓨터공학과', year: 1, entranceYear: 2026, interests: [] };
 
 let nextId = 1;
-function notice(target: string | null, opts: { title?: string; category?: string; deadline?: string | null } = {}): NoticeListItem {
+function notice(target: string | null, opts: { title?: string; category?: string; deadline?: string | null; sources?: string[] } = {}): NoticeListItem {
   const id = nextId++;
+  const sources = (opts.sources ?? ['inha-main-notice']).map((source) => ({
+    source, kind: sourceMeta(source).kind, url: '', sourceNoticeId: String(id), publishedAt: '2026-09-20',
+  }));
   return {
-    id, sourceNoticeId: String(id), title: opts.title ?? `공지 ${id}`, sourceUrl: '', publishedAt: '2026-09-20',
+    id, sourceNoticeId: String(id), title: opts.title ?? `공지 ${id}`, sourceUrl: '', sources, publishedAt: '2026-09-20',
     boardCategory: null, crawledAt: '', contentUpdatedAt: null, analysisStatus: target === null ? 'pending' : 'ready',
     analysis: target === null ? null : ({
       category: opts.category ?? '기타', target, deadline: opts.deadline ?? null, applicationEnd: null, applicationStart: null, eventDate: null,

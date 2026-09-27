@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import type { ApiError, NoticeDetail, NoticeListItem } from '@shared/api/types.ts';
+import type { ApiError, ApiMeta, NoticeDetail, NoticeListItem } from '@shared/api/types.ts';
 
 // Thin client for src/server.ts. Types come from the backend — no duplicated shapes.
 // Static hosting (GitHub Pages) has no server: `npm run export` writes the same responses
@@ -25,6 +25,7 @@ export const api = {
   notices: (signal?: AbortSignal) => getJson<NoticeListItem[]>(STATIC ? `${BASE}api/notices.json` : '/api/notices', signal),
   notice: (id: number, signal?: AbortSignal) =>
     getJson<NoticeDetail>(STATIC ? `${BASE}api/notices/${id}.json` : `/api/notices/${id}`, signal),
+  meta: (signal?: AbortSignal) => getJson<ApiMeta>(STATIC ? `${BASE}api/meta.json` : '/api/meta', signal),
 };
 
 export type AsyncState<T> =

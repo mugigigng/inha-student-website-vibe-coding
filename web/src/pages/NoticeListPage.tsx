@@ -8,6 +8,7 @@ import { deadlineOf, NoticeCard } from '../components/NoticeCard.tsx';
 import { StateMessage } from '../components/StateMessage.tsx';
 import { UpcomingList } from '../components/UpcomingList.tsx';
 import { api, useApi } from '../lib/api.ts';
+import { lastCheckedAt } from '../lib/lastChecked.ts';
 import { CATEGORIES, PENDING_FILTER } from '../lib/categories.ts';
 import { daysUntil, todayKst } from '../lib/dates.ts';
 import { categoryName } from '../lib/i18n.ts';
@@ -40,6 +41,8 @@ function byDeadline(a: NoticeListItem, b: NoticeListItem) {
 export function NoticeListPage() {
   const { lang, t } = useLanguage();
   const state = useApi(api.notices);
+  // "Last checked" = last successful board check by ingest (see lib/lastChecked.ts); a failure here is ignored.
+  const meta = useApi(api.meta);
   const [params, setParams] = useSearchParams();
   const rawFilter = params.get('category');
   const filter = !rawFilter || rawFilter === '전체' ? ALL : rawFilter; // '전체' = older links
@@ -123,7 +126,7 @@ export function NoticeListPage() {
   const home = useMemo(() => buildHome(notices, profile, todayKst()), [notices, profile]);
 
   const analyzed = notices.filter((n) => n.analysis).length;
-  const lastChecked = notices.reduce<string | null>((max, n) => (!max || n.crawledAt > max ? n.crawledAt : max), null);
+  const lastChecked = lastCheckedAt(meta.status === 'loading' ? undefined : meta.status === 'ok' ? meta.data : null, notices);
   const closingSoon = notices.filter((n) => {
     const d = deadlineOf(n);
     return d !== null && daysUntil(d) >= 0 && daysUntil(d) <= 7;

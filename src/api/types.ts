@@ -53,6 +53,18 @@ export interface NoticeListItem {
   analysis: NoticeAnalysis | null;
 }
 
+/** GET /api/meta (static: api/meta.json). */
+export interface ApiMeta {
+  /**
+   * When the boards were last checked by ingest: the OLDEST of the per-board list checks, so no
+   * board is claimed fresher than it is. Falls back to the newest crawledAt for databases from
+   * before per-board checks. null = nothing stored.
+   */
+  lastCheckedAt: string | null;
+  /** Per-board last successful list check (ISO), for boards the site knows about. */
+  boards: { source: string; checkedAt: string }[];
+}
+
 export interface NoticeDetail extends NoticeListItem {
   author: string | null;
   attachments: RawNotice['attachments'];

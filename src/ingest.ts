@@ -1,6 +1,6 @@
 import type { DatabaseSync } from 'node:sqlite';
 import { PROMPT_VERSION, type AnalysisResult } from './analyze.ts';
-import { contentHash, currentGroupAnalysis, getNotice, insertAnalysis, storedNoticeState, storedRawNotice, upsertNotice, type UpsertStatus } from './db.ts';
+import { contentHash, currentGroupAnalysis, getNotice, insertAnalysis, recordSourceCheck, storedNoticeState, storedRawNotice, upsertNotice, type UpsertStatus } from './db.ts';
 import { daysApart } from './dedup.ts';
 import { AiApiError } from './errors.ts';
 import type { ListedNotice } from './sources/k2web.ts';
@@ -115,6 +115,8 @@ export interface IngestStats {
   aiStoppedReason: string | null;
   /** HTTP requests this board made during the run (when the source reports them). */
   http: HttpCount | null;
+  /** When the board's list was read successfully (ISO); ingestAll stores it as the board's last check. */
+  listedAt: string | null;
   errors: { noticeId: string; stage: 'crawl' | 'analysis'; message: string }[];
 }
 
@@ -128,12 +130,13 @@ export async function ingest(deps: IngestDeps): Promise<IngestStats> {
   const stats: IngestStats = {
     found: 0, pinned: 0, fetched: 0, known: 0, new: 0, updated: 0, unchanged: 0, crawlFailed: 0,
     analyzed: 0, analysisFailed: 0, analysisDeferred: 0, analysisSkipped: 0, duplicates: 0,
-    aiStoppedReason: deps.analyze ? (deps.aiStoppedReason ?? null) : 'AI disabled for this run', http: null, errors: [],
+    aiStoppedReason: deps.analyze ? (deps.aiStoppedReason ?? null) : 'AI disabled for this run', http: null, listedAt: null, errors: [],
   };
   const httpBefore = deps.httpRequests ? { ...deps.httpRequests() } : null;
 
   // Listing failure (site down, layout change) aborts the run: there is nothing to iterate.
   const listed = selectListed(await deps.listNotices(), deps.limit);
+  stats.listedAt = new Date().toISOString();
   stats.found = listed.length;
   stats.pinned = listed.filter((n) => n.pinned).length;
   log(`[CRAWL] Found ${listed.length} notices` + (stats.pinned ? ` (${stats.pinned} pinned, not counted in the limit)` : ''));
@@ -299,6 +302,8 @@ export async function ingestAll(
         ...deps, listNotices: s.listNotices, fetchNotice: s.fetchNotice, limit: s.limit, httpRequests: s.httpRequests, aiStoppedReason,
       });
       if (deps.analyze) aiStoppedReason = stats.aiStoppedReason;
+      // Only a successful listing counts as "checked" (the home page's "last checked" time).
+      if (stats.listedAt) recordSourceCheck(deps.db, s.id, stats.listedAt);
       runs.push({ source: s.id, listFailed: null, stats });
     } catch (err) {
       log(`[ERROR] Source ${s.id} listing failed, skipping it this run: ${describe(err)}`);

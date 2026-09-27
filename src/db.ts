@@ -54,6 +54,13 @@ CREATE TABLE IF NOT EXISTS notice_analysis (
   created_at            TEXT NOT NULL,
   content_hash          TEXT
 );
+
+-- When each board's list page was last read successfully (ingest), i.e. when the site last
+-- confirmed there was nothing newer. Known posts aren't re-fetched, so crawled_at can't show this.
+CREATE TABLE IF NOT EXISTS source_checks (
+  source     TEXT PRIMARY KEY,
+  checked_at TEXT NOT NULL
+);
 `;
 
 export function openDb(path = DB_PATH): DatabaseSync {
@@ -96,6 +103,18 @@ function migrate(db: DatabaseSync) {
     for (const r of rows) set.run(normalizeTitle(r.title), r.id);
   }
   db.exec('CREATE INDEX IF NOT EXISTS notices_dedup_key ON notices (dedup_key)');
+}
+
+/** Records a successful list check of a board (ISO time). */
+export function recordSourceCheck(db: DatabaseSync, source: string, checkedAt: string): void {
+  db.prepare(
+    'INSERT INTO source_checks (source, checked_at) VALUES (?, ?) ON CONFLICT (source) DO UPDATE SET checked_at = excluded.checked_at',
+  ).run(source, checkedAt);
+}
+
+export function sourceChecks(db: DatabaseSync): { source: string; checkedAt: string }[] {
+  return (db.prepare('SELECT source, checked_at FROM source_checks ORDER BY source').all() as { source: string; checked_at: string }[])
+    .map((r) => ({ source: r.source, checkedAt: r.checked_at }));
 }
 
 const sha256 = (s: string) => createHash('sha256').update(s).digest('hex');

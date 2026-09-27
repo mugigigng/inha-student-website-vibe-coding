@@ -1,5 +1,6 @@
 import './env.ts';
 import { createServer, type ServerResponse } from 'node:http';
+import { getMeta } from './api/meta.ts';
 import { getNoticeDetail, listNotices } from './api/notices.ts';
 import type { ApiError } from './api/types.ts';
 import { DB_PATH, openDb } from './db.ts';
@@ -7,6 +8,7 @@ import { DB_PATH, openDb } from './db.ts';
 // Minimal read-only JSON API for the web frontend. No writes, no AI calls.
 //   GET /api/notices       -> NoticeListItem[]
 //   GET /api/notices/:id   -> NoticeDetail
+//   GET /api/meta          -> ApiMeta (last board check)
 
 const PORT = Number(process.env.API_PORT ?? 8787);
 const db = openDb();
@@ -21,6 +23,7 @@ createServer((req, res) => {
   try {
     if (req.method !== 'GET') return send(res, 405, { error: 'Method not allowed' } satisfies ApiError);
     if (url.pathname === '/api/notices') return send(res, 200, listNotices(db));
+    if (url.pathname === '/api/meta') return send(res, 200, getMeta(db));
     const m = url.pathname.match(/^\/api\/notices\/(\d+)$/);
     if (m) {
       const notice = getNoticeDetail(db, Number(m[1]));

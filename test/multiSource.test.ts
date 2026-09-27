@@ -139,3 +139,25 @@ test('an AI stop (quota) carries over to later boards: they defer instead of cal
   assert.equal(runs[1].stats!.analysisDeferred, 1);
   assert.equal(runs[2].stats!.analysisDeferred + runs[2].stats!.duplicates, 2);
 });
+
+test('--max-ai budget is shared across boards; the rest stays pending for the next run', async () => {
+  const db = openDb(':memory:');
+  let aiCalls = 0;
+  const analyze = async () => (aiCalls++, okAnalysis());
+  const lines: string[] = [];
+  const runs = await ingestAll(boards(), { db, analyze, aiBudget: { left: 2 }, log: (l) => lines.push(l), crawlDelayMs: 0, today: TODAY });
+
+  assert.equal(aiCalls, 2);
+  assert.deepEqual(runs.map((r) => [r.source, r.stats?.analyzed, r.stats?.analysisDeferred]), [
+    ['inha-main-notice', 1, 0],
+    ['inha-aicc-notice', 1, 0],
+    ['inha-cse-notice', 0, 1],
+  ]);
+  assert.ok(lines.some((l) => l.includes('AI call limit for this run reached (--max-ai)')));
+  assert.equal(listNotices(db).filter((n) => n.analysisStatus === 'pending').length, 1);
+
+  // next run with a fresh budget analyzes only the deferred notice
+  await ingestAll(boards(), { db, analyze, aiBudget: { left: 20 }, log: () => {}, crawlDelayMs: 0, today: TODAY });
+  assert.equal(aiCalls, 3);
+  assert.equal(listNotices(db).filter((n) => n.analysisStatus === 'pending').length, 0);
+});

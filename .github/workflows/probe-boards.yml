@@ -1,0 +1,24 @@
+# Manual reachability check: can a GitHub-hosted runner (overseas IP) reach the Inha boards?
+# One list-page request per board with the crawler's User-Agent; prints status and size only.
+name: Probe notice boards
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: Runner public IP (for context)
+        run: curl -s --max-time 5 https://ipinfo.io/json | grep -E '"(ip|country|org)"' || true
+      - run: npx tsx scripts/probe-boards.ts

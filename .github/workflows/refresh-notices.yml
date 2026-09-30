@@ -1,6 +1,7 @@
-# Scheduled notice refresh: pull the DB from the "data" branch -> incremental ingest (Claude, at
-# most 20 AI calls; the rest stay pending for the next run) -> save the DB back to "data" ->
-# rebuild the static site on gh-pages. Any hard failure stops the job before deploying, so the
+# Scheduled notice refresh: pull the DB (+ Gemini quota benches) from the "data" branch ->
+# incremental ingest (free-tier Gemini, at most 10 AI calls; the rest stay pending for the next
+# run) -> save both back to "data" -> rebuild the static site on gh-pages. A Gemini quota/overload
+# stop only defers analyses: crawling, saving and deploying still happen. Any hard failure stops the job before deploying, so the
 # live site keeps its previous snapshot. See CLAUDE.md "Scheduled refresh".
 name: Refresh notices
 
@@ -46,20 +47,21 @@ jobs:
           echo "::add-mask::$auth"
           git config --global http.https://github.com/.extraheader "AUTHORIZATION: basic $auth"
 
-      - name: Pull DB from the data branch
+      - name: Pull DB and Gemini cooldowns from the data branch
         run: bash scripts/data-branch.sh pull
 
-      - name: Ingest (incremental, at most 20 AI calls)
+      - name: Ingest (incremental, at most 10 AI calls)
         env:
-          AI_PROVIDER: anthropic
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          AI_PROVIDER: gemini
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           # Without a key the CLI would quietly run with AI disabled; fail loudly instead.
-          [ -n "$ANTHROPIC_API_KEY" ] || { echo "::error::Repository secret ANTHROPIC_API_KEY is not set"; exit 1; }
-          # exit 2 = finished, but some notice or board failed (listed above); the DB is still
-          # consistent and those notices are retried next run. Anything else non-zero = hard failure.
+          [ -n "$GEMINI_API_KEY" ] || { echo "::error::Repository secret GEMINI_API_KEY is not set"; exit 1; }
+          # exit 2 = finished, but some notice or board failed (listed above), e.g. Gemini 429/503
+          # stopped AI for this run; the DB is still consistent and those notices stay pending for
+          # the next run. Anything else non-zero = hard failure.
           set +e
-          npx tsx src/cli.ts ingest --max-ai 20
+          npx tsx src/cli.ts ingest --max-ai 10
           code=$?
           set -e
           if [ "$code" -eq 2 ]; then
@@ -79,7 +81,7 @@ jobs:
             if (n === 0) { console.error('[CHECK] empty DB, refusing to save/deploy'); process.exit(1); }
           "
 
-      - name: Save DB to the data branch
+      - name: Save DB and Gemini cooldowns to the data branch
         run: bash scripts/data-branch.sh push
 
       - name: Deploy to gh-pages

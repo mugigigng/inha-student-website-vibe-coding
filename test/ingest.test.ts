@@ -213,6 +213,25 @@ test('repeated 503 overloads stop AI after 3 consecutive failures', async () => 
   assert.deepEqual([calls, stats.analysisFailed, stats.analysisDeferred], [3, 3, 1]);
 });
 
+test('notices left pending by a quota/overload stop are analyzed on the next run', async () => {
+  const db = openDb(':memory:');
+  const site = fakeSite({ '1': TEXT('a'), '2': TEXT('b'), '3': TEXT('c'), '4': TEXT('d') });
+  const quota = async () => {
+    throw new AiApiError('Gemini API error 429 quota', { status: 429 });
+  };
+  await run(db, site, ['1', '2', '3'], quota);
+  const overload = async () => {
+    throw new AiApiError('Gemini API error 503 high demand', { status: 503 });
+  };
+  await run(db, site, ['1', '2', '3', '4'], overload);
+  assert.deepEqual(counts(db), { notices: 4, analyses: 0, analyzed_current: 0, pending_analysis: 4 });
+
+  let calls = 0;
+  const { stats } = await run(db, site, ['1', '2', '3', '4'], async () => (calls++, okAnalysis()));
+  assert.deepEqual([calls, stats.analyzed, stats.new], [4, 4, 0]);
+  assert.deepEqual(counts(db), { notices: 4, analyses: 4, analyzed_current: 4, pending_analysis: 0 });
+});
+
 test('AI disabled (no key): notices still ingested, analysis deferred', async () => {
   const db = openDb(':memory:');
   const { stats } = await run(db, fakeSite({ '1': TEXT('a') }), ['1'], null);
